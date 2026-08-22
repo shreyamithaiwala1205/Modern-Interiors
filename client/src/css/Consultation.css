@@ -1,0 +1,221 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Poppins,sans-serif;
+}
+
+/* ==========================
+   PAGE
+========================== */
+
+.consultation-page{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#111;
+  padding:120px 20px 60px;
+}
+
+/* ==========================
+   CARD
+========================== */
+
+.consultation-card{
+  width:100%;
+  max-width:650px;
+  background:#1b1b1b;
+  border:1px solid #2f2f2f;
+  border-radius:18px;
+  padding:45px;
+  box-shadow:0 15px 35px rgba(0,0,0,.35);
+}
+
+.consultation-card h2{
+  color:#D4AF37;
+  font-size:38px;
+  margin-bottom:10px;
+  font-weight:700;
+}
+
+.consultation-card p{
+  color:#bdbdbd;
+  margin-bottom:30px;
+  font-size:16px;
+  line-height:1.6;
+}
+
+.consultation-card form{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+/* ==========================
+   INPUTS
+========================== */
+
+.consultation-card input,
+.consultation-card select,
+.consultation-card textarea{
+
+  width:100%;
+  padding:15px 18px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#262626;
+  color:#fff;
+  font-size:15px;
+  outline:none;
+  transition:.3s;
+
+}
+
+.consultation-card input:focus,
+.consultation-card select:focus,
+.consultation-card textarea:focus{
+
+  border-color:#D4AF37;
+  box-shadow:0 0 8px rgba(212,175,55,.25);
+
+}
+
+/* ==========================
+   PLACEHOLDER
+========================== */
+
+.consultation-card input::placeholder,
+.consultation-card textarea::placeholder{
+
+  color:#a9a9a9;
+  opacity:1;
+
+}
+
+/* ==========================
+   SELECT
+========================== */
+
+.consultation-card select{
+
+  color:#a9a9a9;
+  cursor:pointer;
+
+}
+
+.consultation-card select:valid{
+
+  color:#fff;
+
+}
+
+/* ==========================
+   DATE & TIME
+========================== */
+
+.consultation-card input[type="date"],
+.consultation-card input[type="time"]{
+
+  color:#a9a9a9;
+  cursor:pointer;
+
+}
+
+.consultation-card input[type="date"]:valid,
+.consultation-card input[type="time"]:valid{
+
+  color:#fff;
+
+}
+
+/* Calendar icon */
+
+.consultation-card input[type="date"]::-webkit-calendar-picker-indicator,
+.consultation-card input[type="time"]::-webkit-calendar-picker-indicator{
+
+  filter:invert(1);
+  cursor:pointer;
+
+}
+
+/* ==========================
+   TEXTAREA
+========================== */
+
+.consultation-card textarea{
+
+  resize:none;
+  min-height:140px;
+
+}
+
+/* ==========================
+   DATE ROW
+========================== */
+
+.row{
+
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+
+}
+
+/* ==========================
+   BUTTON
+========================== */
+
+.consultation-card button{
+
+  background:#D4AF37;
+  color:#111;
+  border:none;
+  padding:16px;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.3s;
+
+}
+
+.consultation-card button:hover{
+
+  background:#f0c94d;
+  transform:translateY(-2px);
+
+}
+
+.consultation-card button:disabled{
+
+  opacity:.7;
+  cursor:not-allowed;
+
+}
+
+/* ==========================
+   RESPONSIVE
+========================== */
+
+@media(max-width:768px){
+
+  .consultation-card{
+
+    padding:30px 22px;
+
+  }
+
+  .consultation-card h2{
+
+    font-size:30px;
+
+  }
+
+  .row{
+
+    grid-template-columns:1fr;
+
+  }
+
+}

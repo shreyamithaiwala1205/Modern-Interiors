@@ -1,0 +1,30 @@
+{
+  "name": "modern-interiors-workspace",
+  "version": "1.0.0",
+  "description": "Modern Interiors - Luxury Furniture & Interior Design Web Application",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "install:server": "npm install --prefix server",
+    "install:client": "npm install --prefix client",
+    "install:all": "npm install && npm run install:server && npm run install:client",
+    "build": "npm run build --prefix client",
+    "lint": "npm run lint --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "modern-interiors",
+    "furniture",
+    "interior-design",
+    "mern-stack",
+    "react",
+    "express",
+    "mongodb"
+  ],
+  "author": "Modern Interiors",
+  "license": "ISC"
+}

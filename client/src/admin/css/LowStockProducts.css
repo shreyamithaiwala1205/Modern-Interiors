@@ -1,0 +1,203 @@
+/* ===========================
+   Low Stock Products
+=========================== */
+
+.low-stock{
+
+    margin-top:35px;
+
+    background:#1b1b1b;
+
+    border:1px solid rgba(212,175,55,.15);
+
+    border-radius:18px;
+
+    padding:30px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+
+}
+
+.low-stock-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
+}
+
+.low-stock-header h2{
+
+    margin:0;
+
+    color:#D4AF37;
+
+    font-size:26px;
+
+}
+
+.low-stock-header p{
+
+    margin-top:6px;
+
+    color:#999;
+
+    font-size:14px;
+
+}
+
+.stock-card{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px 0;
+
+    border-bottom:1px solid #2d2d2d;
+
+    transition:.3s;
+
+}
+
+.stock-card:last-child{
+
+    border-bottom:none;
+
+}
+
+.stock-card:hover{
+
+    transform:translateX(6px);
+
+}
+
+.stock-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+}
+
+.stock-icon{
+
+    width:50px;
+
+    height:50px;
+
+    border-radius:12px;
+
+    background:#3a2d12;
+
+    color:#D4AF37;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+.stock-left h4{
+
+    margin:0;
+
+    color:#fff;
+
+    font-size:17px;
+
+}
+
+.stock-left p{
+
+    margin-top:5px;
+
+    color:#999;
+
+    font-size:14px;
+
+}
+
+.stock-warning{
+    background:#ff4d4f;
+    color:#fff;
+    padding:8px 18px;
+    border-radius:50px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:1px;
+}
+
+.stock-empty{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    padding:45px 20px;
+
+}
+
+.stock-empty svg{
+
+    color:#32c766;
+
+    margin-bottom:15px;
+
+}
+
+.stock-empty h3{
+
+    color:#fff;
+
+    margin:0;
+
+    font-size:22px;
+
+}
+
+.stock-empty p{
+
+    color:#999;
+
+    margin-top:8px;
+
+    font-size:15px;
+
+}
+
+@media(max-width:768px){
+
+.stock-card{
+
+    flex-direction:column;
+
+    align-items:flex-start;
+
+    gap:15px;
+
+}
+
+.stock-warning{
+
+    align-self:flex-start;
+
+}
+
+}

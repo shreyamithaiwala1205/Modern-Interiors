@@ -1,0 +1,818 @@
+/* =========================================================
+   ADMIN GLOBAL
+========================================================= */
+
+.admin-container,
+.admin-container * {
+    box-sizing: border-box;
+}
+
+.admin-container {
+    width: 100%;
+    min-height: 100vh;
+    background: #111111;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   ADMIN MAIN
+========================================================= */
+
+.admin-main {
+    margin-left: 270px;
+    width: calc(100% - 270px);
+    min-height: 100vh;
+    background: #111111;
+}
+
+.admin-content {
+    width: 100%;
+    min-height: calc(100vh - 80px);
+
+    padding: 30px;
+
+    margin-top: 80px;
+
+    background: #111111;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.admin-sidebar {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 270px;
+    height: 100vh;
+
+    background: #181818;
+
+    border-right: 1px solid #2d2d2d;
+
+    display: flex;
+    flex-direction: column;
+
+    z-index: 2000;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   SIDEBAR LOGO
+========================================================= */
+
+.admin-sidebar-logo {
+    width: 100%;
+
+    padding: 30px 28px 28px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    text-decoration: none;
+
+    border-bottom: 1px solid #2d2d2d;
+
+    background: #181818;
+
+    flex-shrink: 0;
+}
+
+
+/* Modern */
+.admin-sidebar-logo-title {
+    display: flex;
+    flex-direction: column;
+
+    line-height: 1.35;
+
+    font-size: 30px;
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
+
+    color: #d4af37;
+}
+
+
+/* Interiors */
+.admin-sidebar-logo-title span {
+    display: block;
+}
+
+
+/* ADMIN PANEL */
+.admin-sidebar-logo-subtitle {
+    display: block;
+
+    margin-top: 10px;
+
+    color: #999999;
+
+    font-size: 13px;
+
+    font-weight: 400;
+
+    letter-spacing: 3px;
+}
+
+
+/* Logo hover */
+.admin-sidebar-logo:hover
+.admin-sidebar-logo-title {
+    color: #f0c94c;
+}
+
+
+/* =========================================================
+   SIDEBAR NAVIGATION
+========================================================= */
+
+.admin-sidebar-navigation {
+    width: 100%;
+
+    flex: 1;
+
+    padding: 24px 18px 20px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+
+/* =========================================================
+   SIDEBAR LINKS
+========================================================= */
+
+.admin-sidebar-link {
+    width: 100%;
+    min-height: 52px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 13px 18px;
+
+    border-radius: 11px;
+
+    text-decoration: none;
+
+    color: #dddddd;
+
+    font-size: 16px;
+
+    font-weight: 500;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+    transition:
+        background 0.25s ease,
+        color 0.25s ease,
+        transform 0.25s ease;
+}
+
+
+/* Icon */
+.admin-sidebar-link svg {
+    flex-shrink: 0;
+
+    width: 21px;
+    height: 21px;
+
+    stroke-width: 2;
+}
+
+
+/* Text */
+.admin-sidebar-link span {
+    display: block;
+
+    white-space: nowrap;
+}
+
+
+/* Hover */
+.admin-sidebar-link:hover {
+    background: #242424;
+
+    color: #d4af37;
+
+    transform: translateX(3px);
+}
+
+
+/* Active */
+.admin-sidebar-link.active {
+    background: #d4af37;
+
+    color: #111111;
+
+    font-weight: 600;
+}
+
+
+/* Active icon */
+.admin-sidebar-link.active svg {
+    color: #111111;
+}
+
+
+/* =========================================================
+   SECTION TITLES
+========================================================= */
+
+.admin-sidebar-section-title {
+    width: 100%;
+
+    margin-top: 24px;
+
+    margin-bottom: 7px;
+
+    padding-left: 18px;
+
+    color: #666666;
+
+    font-size: 12px;
+
+    font-weight: 500;
+
+    letter-spacing: 3px;
+
+    line-height: 1.4;
+}
+
+
+/* First section title */
+.admin-sidebar-navigation
+.admin-sidebar-section-title:first-of-type {
+    margin-top: 24px;
+}
+
+
+/* Inventory title */
+.admin-sidebar-section-title.inventory-title {
+    margin-top: 24px;
+}
+
+
+/* =========================================================
+   SIDEBAR LOGOUT
+========================================================= */
+
+.admin-sidebar-logout {
+    width: calc(100% - 36px);
+
+    min-height: 54px;
+
+    margin: 18px;
+
+    padding: 14px 18px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #d4af37;
+
+    color: #111111;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 11px;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    flex-shrink: 0;
+
+    transition:
+        background 0.25s ease,
+        transform 0.25s ease;
+}
+
+
+.admin-sidebar-logout svg {
+    flex-shrink: 0;
+}
+
+
+.admin-sidebar-logout:hover {
+    background: #f0c94c;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   SIDEBAR SCROLLBAR
+========================================================= */
+
+.admin-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+    background: #181818;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background: #3a3a3a;
+
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   ADMIN NAVBAR
+========================================================= */
+
+.admin-navbar {
+    position: fixed;
+
+    top: 0;
+    left: 270px;
+    right: 0;
+
+    height: 80px;
+
+    padding: 0 30px;
+
+    background: #181818;
+
+    border-bottom: 1px solid #2d2d2d;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    z-index: 1500;
+}
+
+
+/* =========================================================
+   NAVBAR LEFT
+========================================================= */
+
+.navbar-left {
+    min-width: 0;
+}
+
+.navbar-left h2 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 28px;
+
+    font-weight: 700;
+
+    line-height: 1.1;
+}
+
+.navbar-left p {
+    margin: 5px 0 0;
+
+    color: #999999;
+
+    font-size: 14px;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   NAVBAR RIGHT
+========================================================= */
+
+.navbar-right {
+    display: flex;
+
+    align-items: center;
+
+    gap: 16px;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   NAVBAR SEARCH
+========================================================= */
+
+.navbar-search {
+    width: 260px;
+    height: 46px;
+
+    padding: 0 14px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    background: #232323;
+
+    border: 1px solid #333333;
+
+    border-radius: 11px;
+
+    color: #999999;
+}
+
+
+.navbar-search svg {
+    flex-shrink: 0;
+}
+
+
+.navbar-search input {
+    width: 100%;
+
+    min-width: 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: #ffffff;
+
+    font-size: 15px;
+}
+
+
+.navbar-search input::placeholder {
+    color: #777777;
+}
+
+
+/* =========================================================
+   NAVBAR ICON
+========================================================= */
+
+.navbar-icon {
+    width: 46px;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 11px;
+
+    background: #232323;
+
+    color: #ffffff;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+}
+
+
+.navbar-icon:hover {
+    background: #d4af37;
+
+    color: #111111;
+}
+
+
+/* =========================================================
+   ADMIN PROFILE
+========================================================= */
+
+.admin-profile {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    color: #ffffff;
+
+    white-space: nowrap;
+}
+
+
+.admin-profile > svg {
+    flex-shrink: 0;
+
+    width: 40px;
+    height: 40px;
+}
+
+
+.admin-profile h4 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    line-height: 1.2;
+}
+
+
+.admin-profile span {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #888888;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   NAVBAR LOGOUT
+========================================================= */
+
+.admin-logout {
+    height: 44px;
+
+    padding: 0 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #111111;
+
+    font-size: 15px;
+
+    font-weight: 500;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition: 0.25s ease;
+}
+
+
+.admin-logout:hover {
+    background: #d4af37;
+
+    color: #111111;
+}
+
+
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
+
+.admin-login {
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    background: #111111;
+}
+
+
+.admin-login-box {
+    width: 400px;
+
+    background: #1c1c1c;
+
+    padding: 40px;
+
+    border-radius: 15px;
+
+    border: 1px solid #d4af37;
+}
+
+
+.admin-login-box h1 {
+    text-align: center;
+
+    color: #d4af37;
+
+    margin-bottom: 30px;
+}
+
+
+.admin-login-box form {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+
+.admin-login-box input {
+    padding: 14px;
+
+    background: #222222;
+
+    color: #ffffff;
+
+    border: 1px solid #555555;
+
+    border-radius: 8px;
+
+    font-size: 16px;
+
+    outline: none;
+}
+
+
+.admin-login-box input:focus {
+    border-color: #d4af37;
+}
+
+
+.admin-login-box button {
+    padding: 14px;
+
+    background: #d4af37;
+
+    color: #111111;
+
+    border: none;
+
+    border-radius: 8px;
+
+    font-size: 17px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+
+.admin-login-box button:hover {
+    background: #f0c74d;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+
+    .admin-sidebar {
+        width: 240px;
+    }
+
+    .admin-main {
+        margin-left: 240px;
+
+        width: calc(100% - 240px);
+    }
+
+    .admin-navbar {
+        left: 240px;
+    }
+
+    .navbar-search {
+        width: 210px;
+    }
+
+    .admin-navbar {
+        padding: 0 20px;
+    }
+}
+
+
+@media (max-width: 900px) {
+
+    .admin-sidebar {
+        width: 220px;
+    }
+
+    .admin-main {
+        margin-left: 220px;
+
+        width: calc(100% - 220px);
+    }
+
+    .admin-navbar {
+        left: 220px;
+
+        padding: 0 15px;
+    }
+
+    .navbar-search {
+        width: 170px;
+    }
+
+    .admin-profile div {
+        display: none;
+    }
+
+    .admin-content {
+        padding: 20px;
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .admin-sidebar {
+        width: 75px;
+    }
+
+    .admin-main {
+        margin-left: 75px;
+
+        width: calc(100% - 75px);
+    }
+
+    .admin-navbar {
+        left: 75px;
+    }
+
+    .admin-sidebar-logo {
+        padding: 20px 10px;
+
+        align-items: center;
+    }
+
+    .admin-sidebar-logo-title {
+        font-size: 17px;
+
+        text-align: center;
+    }
+
+    .admin-sidebar-logo-subtitle {
+        font-size: 8px;
+
+        letter-spacing: 1px;
+
+        text-align: center;
+    }
+
+    .admin-sidebar-link {
+        justify-content: center;
+
+        padding: 13px 8px;
+    }
+
+    .admin-sidebar-link span,
+    .admin-sidebar-section-title,
+    .admin-sidebar-logout span {
+        display: none;
+    }
+
+    .admin-sidebar-logout {
+        width: calc(100% - 20px);
+
+        margin: 10px;
+
+        padding: 14px 5px;
+    }
+
+    .navbar-left h2 {
+        font-size: 22px;
+    }
+
+    .navbar-left p {
+        display: none;
+    }
+
+    .navbar-search {
+        display: none;
+    }
+}

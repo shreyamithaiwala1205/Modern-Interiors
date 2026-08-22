@@ -1,0 +1,129 @@
+/* ===========================
+   ACCOUNT PAGE
+=========================== */
+
+.account-page{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#111;
+    padding:130px 20px 80px;
+}
+
+/* Card */
+
+.account-container{
+    width:100%;
+    max-width:460px;
+}
+
+/* Toggle */
+
+.toggle-box{
+
+    display:flex;
+
+    background:#1b1b1b;
+
+    border:1px solid rgba(212,175,55,.25);
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+    margin-bottom:25px;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.35);
+
+}
+
+.toggle-box button{
+
+    flex:1;
+
+    padding:16px;
+
+    border:none;
+
+    background:transparent;
+
+    color:#bbb;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.35s;
+
+}
+
+.toggle-box button:hover{
+
+    color:#fff;
+
+}
+
+.toggle-box button.active{
+
+    background:#D4AF37;
+
+    color:#111;
+
+}
+
+/* Form */
+
+.form-box{
+
+    animation:fade .35s ease;
+
+}
+
+@keyframes fade{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(15px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+/* Responsive */
+
+@media(max-width:500px){
+
+.account-page{
+
+padding:110px 15px 60px;
+
+}
+
+.account-container{
+
+max-width:100%;
+
+}
+
+.toggle-box button{
+
+font-size:15px;
+
+padding:14px;
+
+}
+
+}

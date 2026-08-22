@@ -1,0 +1,864 @@
+/* ==========================================
+   GOOGLE FONT
+========================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
+
+
+/* ==========================================
+   GLOBAL
+========================================== */
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Poppins",sans-serif;
+}
+
+
+/* ==========================================
+   NAVBAR
+========================================== */
+
+.navbar{
+
+  position:fixed;
+
+  top:0;
+  left:0;
+
+  width:100%;
+
+  z-index:1000;
+
+  background:rgba(10,10,10,.94);
+
+  backdrop-filter:blur(18px);
+
+  border-bottom:1px solid rgba(212,175,55,.12);
+
+  transition:.35s;
+
+}
+
+
+/* ==========================================
+   CONTAINER
+========================================== */
+
+.container{
+
+  width:90%;
+
+  max-width:1450px;
+
+  margin:auto;
+
+  height:90px;
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+}
+
+
+/* ==========================================
+   LOGO
+========================================== */
+
+.logo{
+
+  text-decoration:none;
+
+  color:#ffffff;
+
+  font-size:34px;
+
+  font-weight:800;
+
+  letter-spacing:.5px;
+
+  transition:.3s;
+
+}
+
+.logo span{
+
+  color:#D4AF37;
+
+}
+
+.logo:hover{
+
+  transform:scale(1.03);
+
+}
+
+
+/* ==========================================
+   NAVIGATION
+========================================== */
+
+.nav-links{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:34px;
+
+  list-style:none;
+
+}
+
+.nav-links li{
+
+  position:relative;
+
+}
+
+.nav-links a{
+
+  text-decoration:none;
+
+  color:#ffffff;
+
+  font-size:16px;
+
+  font-weight:500;
+
+  transition:.35s;
+
+  position:relative;
+
+}
+
+
+/* Underline */
+
+.nav-links a::after{
+
+  content:"";
+
+  position:absolute;
+
+  left:0;
+
+  bottom:-8px;
+
+  width:0;
+
+  height:2px;
+
+  background:#D4AF37;
+
+  transition:.35s;
+
+}
+
+.nav-links a:hover{
+
+  color:#D4AF37;
+
+}
+
+.nav-links a:hover::after{
+
+  width:100%;
+
+}
+
+.nav-links a.active{
+
+  color:#D4AF37;
+
+}
+
+.nav-links a.active::after{
+
+  width:100%;
+
+}
+
+
+/* ==========================================
+   ACCOUNT ICON
+========================================== */
+
+.account-link{
+
+  width:46px;
+
+  height:46px;
+
+  border-radius:50%;
+
+  border:2px solid #D4AF37;
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:center;
+
+  color:#D4AF37;
+
+  font-size:22px;
+
+  transition:.35s;
+
+}
+
+.account-link:hover{
+
+  background:#D4AF37;
+
+  color:#111;
+
+  transform:scale(1.08);
+
+}
+
+/* ==========================================
+   BOOK CONSULTATION BUTTON
+========================================== */
+
+.book-btn{
+
+  text-decoration:none;
+
+  background:#D4AF37;
+
+  color:#111;
+
+  padding:14px 30px;
+
+  border-radius:10px;
+
+  font-size:15px;
+
+  font-weight:700;
+
+  letter-spacing:.3px;
+
+  transition:.35s;
+
+  box-shadow:0 8px 25px rgba(212,175,55,.25);
+
+}
+
+.book-btn:hover{
+
+  background:#ffffff;
+
+  color:#111;
+
+  transform:translateY(-3px);
+
+  box-shadow:0 12px 30px rgba(255,255,255,.18);
+
+}
+
+
+/* ==========================================
+   MOBILE MENU ICON
+========================================== */
+
+.menu-icon{
+
+  display:none;
+
+  color:#ffffff;
+
+  font-size:28px;
+
+  cursor:pointer;
+
+  transition:.3s;
+
+}
+
+.menu-icon:hover{
+
+  color:#D4AF37;
+
+}
+
+
+/* ==========================================
+   USER INFO
+========================================== */
+
+.user-info{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+  color:#D4AF37;
+
+  cursor:pointer;
+
+  font-size:15px;
+
+  font-weight:600;
+
+  transition:.3s;
+
+}
+
+.user-info:hover{
+
+  color:#f5d76e;
+
+}
+
+.user-icon{
+
+  font-size:28px;
+
+}
+
+
+/* ==========================================
+   WELCOME USER
+========================================== */
+
+.welcome-user{
+
+  display:flex;
+
+  align-items:center;
+
+  color:#D4AF37;
+
+  font-size:15px;
+
+  font-weight:600;
+
+}
+
+
+/* ==========================================
+   LOGOUT BUTTON (Simple)
+========================================== */
+
+.logout-btn{
+
+  background:#D4AF37;
+
+  color:#111;
+
+  border:none;
+
+  outline:none;
+
+  padding:10px 18px;
+
+  border-radius:8px;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:.35s;
+
+}
+
+.logout-btn:hover{
+
+  background:#b99220;
+
+  color:#fff;
+
+}
+
+/* ==========================================
+   USER DROPDOWN
+========================================== */
+
+.user-dropdown{
+
+  position:relative;
+
+  list-style:none;
+
+}
+
+
+/* ==========================================
+   DROPDOWN BOX
+========================================== */
+
+.dropdown-content{
+
+  position:absolute;
+
+  top:58px;
+
+  right:0;
+
+  width:240px;
+
+  background:rgba(18,18,18,.98);
+
+  backdrop-filter:blur(18px);
+
+  border:1px solid rgba(212,175,55,.22);
+
+  border-radius:14px;
+
+  overflow:hidden;
+
+  box-shadow:
+      0 20px 40px rgba(0,0,0,.45);
+
+  opacity:0;
+
+  visibility:hidden;
+
+  transform:translateY(18px);
+
+  transition:.35s ease;
+
+  z-index:999;
+
+}
+
+
+/* Show Dropdown */
+
+.user-dropdown:hover .dropdown-content{
+
+  opacity:1;
+
+  visibility:visible;
+
+  transform:translateY(0);
+
+}
+
+
+/* ==========================================
+   DROPDOWN LINKS
+========================================== */
+
+.dropdown-content a{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:14px;
+
+  padding:15px 20px;
+
+  text-decoration:none;
+
+  color:#ffffff;
+
+  font-size:15px;
+
+  transition:.35s;
+
+}
+
+
+/* Icons */
+
+.dropdown-icon{
+
+  font-size:17px;
+
+  color:#D4AF37;
+
+  transition:.35s;
+
+}
+
+
+/* Hover */
+
+.dropdown-content a:hover{
+
+  background:#D4AF37;
+
+  color:#111;
+
+}
+
+.dropdown-content a:hover .dropdown-icon{
+
+  color:#111;
+
+}
+
+
+/* ==========================================
+   LOGOUT BUTTON
+========================================== */
+
+.dropdown-content button{
+
+  width:100%;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:14px;
+
+  padding:15px 20px;
+
+  border:none;
+
+  outline:none;
+
+  background:#111;
+
+  color:#ff5b5b;
+
+  font-size:15px;
+
+  cursor:pointer;
+
+  transition:.35s;
+
+}
+
+.dropdown-content button .dropdown-icon{
+
+  color:#ff5b5b;
+
+}
+
+.dropdown-content button:hover{
+
+  background:#ff5b5b;
+
+  color:#ffffff;
+
+}
+
+.dropdown-content button:hover .dropdown-icon{
+
+  color:#ffffff;
+
+}
+
+
+/* ==========================================
+   DROPDOWN DIVIDER
+========================================== */
+
+.dropdown-content::before{
+
+  content:"";
+
+  position:absolute;
+
+  top:0;
+
+  left:0;
+
+  width:100%;
+
+  height:3px;
+
+  background:linear-gradient(
+      90deg,
+      #D4AF37,
+      #f6dd7b,
+      #D4AF37
+  );
+
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width:900px){
+
+  .container{
+
+    height:80px;
+
+  }
+
+  .logo{
+
+    font-size:28px;
+
+  }
+
+  .book-btn{
+
+    display:none;
+
+  }
+
+  .menu-icon{
+
+    display:block;
+
+  }
+
+  .nav-links{
+
+    position:fixed;
+
+    top:80px;
+
+    left:-100%;
+
+    width:100%;
+
+    height:calc(100vh - 80px);
+
+    background:#111;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:flex-start;
+
+    align-items:center;
+
+    gap:30px;
+
+    padding-top:45px;
+
+    transition:.4s;
+
+    overflow-y:auto;
+
+  }
+
+  .nav-links.active{
+
+    left:0;
+
+  }
+
+  .nav-links li{
+
+    width:90%;
+
+    text-align:center;
+
+  }
+
+  .nav-links a{
+
+    display:block;
+
+    padding:12px 0;
+
+    font-size:18px;
+
+  }
+
+  .account-link{
+
+    margin:auto;
+
+  }
+
+  .user-info{
+
+    justify-content:center;
+
+  }
+
+  .dropdown-content{
+
+    position:static;
+
+    width:100%;
+
+    margin-top:15px;
+
+    opacity:1;
+
+    visibility:visible;
+
+    transform:none;
+
+    border-radius:12px;
+
+    background:#1b1b1b;
+
+    border:1px solid rgba(212,175,55,.15);
+
+    box-shadow:none;
+
+  }
+
+  .dropdown-content a{
+
+    justify-content:center;
+
+  }
+
+  .dropdown-content button{
+
+    justify-content:center;
+
+  }
+
+}
+
+
+/* ==========================================
+   SMALL DEVICES
+========================================== */
+
+@media (max-width:600px){
+
+  .container{
+
+    width:94%;
+
+  }
+
+  .logo{
+
+    font-size:23px;
+
+  }
+
+  .menu-icon{
+
+    font-size:24px;
+
+  }
+
+  .nav-links{
+
+    gap:22px;
+
+    padding-top:35px;
+
+  }
+
+  .dropdown-content{
+
+    width:100%;
+
+  }
+
+}
+
+
+/* ==========================================
+   EXTRA POLISH
+========================================== */
+
+html{
+
+  scroll-behavior:smooth;
+
+}
+
+.navbar{
+
+  transition:
+    background .35s,
+    box-shadow .35s;
+
+}
+
+.user-info span{
+
+  white-space:nowrap;
+
+}
+
+.dropdown-content a,
+.dropdown-content button{
+
+  font-weight:500;
+
+}
+
+.dropdown-content a:last-child{
+
+  border-bottom:none;
+
+}
+
+.book-btn:active{
+
+  transform:scale(.97);
+
+}
+
+.account-link:active{
+
+  transform:scale(.95);
+
+}
+
+.menu-icon:active{
+
+  transform:scale(.9);
+
+}
+
+/* ===========================
+   CART COUNT
+=========================== */
+
+.cart-link{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:12px;
+
+}
+
+.cart-icon-wrapper{
+
+  position:relative;
+
+}
+
+.cart-count{
+
+  position:absolute;
+
+  top:-8px;
+
+  right:-10px;
+
+  width:20px;
+
+  height:20px;
+
+  border-radius:50%;
+
+  background:red;
+
+  color:#fff;
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:center;
+
+  font-size:11px;
+
+  font-weight:700;
+
+}

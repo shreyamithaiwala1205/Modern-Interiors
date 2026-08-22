@@ -1,0 +1,751 @@
+/* ===================================================
+   GALLERY PAGE
+   Part 1 : Layout + Hero + Heading + Filter + Grid
+=================================================== */
+
+/* Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+/* ==========================
+   MAIN SECTION
+========================== */
+
+.gallery{
+    width:100%;
+    min-height:100vh;
+    padding:140px 7% 90px;
+    background:#0f0f0f;
+    overflow:hidden;
+}
+
+/* ==========================
+   HERO HEADING
+========================== */
+
+.gallery-heading{
+    text-align:center;
+    max-width:900px;
+    margin:0 auto 70px;
+}
+
+.gallery-heading h4{
+    color:#d4af37;
+    font-size:17px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    margin-bottom:18px;
+    font-weight:600;
+}
+
+.gallery-heading h1{
+    color:#fff;
+    font-size:56px;
+    line-height:1.2;
+    font-weight:700;
+    margin-bottom:20px;
+}
+
+.gallery-heading h1 span{
+    color:#d4af37;
+}
+
+.gallery-heading p{
+    color:#cfcfcf;
+    font-size:17px;
+    line-height:1.9;
+    max-width:720px;
+    margin:auto;
+}
+
+/* ==========================
+   FILTER BUTTONS
+========================== */
+
+.gallery-filter{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:18px;
+    margin-bottom:70px;
+}
+
+.gallery-filter button{
+    background:#171717;
+    color:#fff;
+    border:1px solid #2f2f2f;
+    padding:13px 30px;
+    border-radius:50px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:600;
+    transition:.35s ease;
+}
+
+.gallery-filter button:hover{
+    background:#d4af37;
+    color:#111;
+    border-color:#d4af37;
+    transform:translateY(-3px);
+}
+
+.gallery-filter button.active{
+    background:#d4af37;
+    color:#111;
+    border-color:#d4af37;
+    box-shadow:0 0 20px rgba(212,175,55,.35);
+}
+
+/* ==========================
+   GALLERY GRID
+========================== */
+
+.gallery-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+    gap:35px;
+    margin-bottom:90px;
+    align-items:stretch;
+}
+
+/* Small animation */
+
+.gallery-card{
+    animation:fadeUp .8s ease;
+}
+
+@keyframes fadeUp{
+
+    from{
+        opacity:0;
+        transform:translateY(35px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+}
+
+/* ===================================================
+   GALLERY PAGE
+   Part 2 : Gallery Card + Image + Overlay + Button
+=================================================== */
+
+/* ==========================
+   GALLERY CARD
+========================== */
+
+.gallery-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:22px;
+    background:#181818;
+    border:1px solid rgba(255,255,255,.08);
+    cursor:pointer;
+    transition:.45s ease;
+    box-shadow:0 15px 35px rgba(0,0,0,.35);
+}
+
+.gallery-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+        135deg,
+        rgba(212,175,55,.12),
+        transparent 45%
+    );
+    opacity:0;
+    transition:.4s;
+    z-index:2;
+}
+
+.gallery-card:hover{
+    transform:translateY(-12px);
+    border-color:#d4af37;
+    box-shadow:0 20px 45px rgba(212,175,55,.20);
+}
+
+.gallery-card:hover::before{
+    opacity:1;
+}
+
+/* ==========================
+   IMAGE
+========================== */
+
+.gallery-card img{
+    width:100%;
+    height:330px;
+    object-fit:cover;
+    display:block;
+    transition:transform .7s ease, filter .5s ease;
+}
+
+.gallery-card:hover img{
+    transform:scale(1.08);
+    filter:brightness(.65);
+}
+
+/* ==========================
+   OVERLAY
+========================== */
+
+.gallery-overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    padding:30px;
+    background:linear-gradient(
+        to top,
+        rgba(0,0,0,.96) 5%,
+        rgba(0,0,0,.65) 45%,
+        rgba(0,0,0,.05) 100%
+    );
+    opacity:0;
+    transition:.45s ease;
+    z-index:3;
+}
+
+.gallery-card:hover .gallery-overlay{
+    opacity:1;
+}
+
+/* ==========================
+   OVERLAY CONTENT
+========================== */
+
+.gallery-overlay h3{
+    color:#fff;
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:10px;
+    transform:translateY(25px);
+    transition:.4s ease;
+}
+
+.gallery-overlay p{
+    color:#d4af37;
+    font-size:15px;
+    letter-spacing:1px;
+    margin-bottom:22px;
+    transform:translateY(25px);
+    transition:.5s ease;
+}
+
+.gallery-card:hover .gallery-overlay h3,
+.gallery-card:hover .gallery-overlay p{
+    transform:translateY(0);
+}
+
+/* ==========================
+   VIEW PROJECT BUTTON
+========================== */
+
+.gallery-overlay button{
+    width:180px;
+    padding:13px 20px;
+    border:none;
+    border-radius:50px;
+    background:#d4af37;
+    color:#111;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.35s ease;
+    transform:translateY(25px);
+}
+
+.gallery-card:hover .gallery-overlay button{
+    transform:translateY(0);
+}
+
+.gallery-overlay button:hover{
+    background:#fff;
+    color:#111;
+    transform:translateY(-3px);
+}
+
+/* ==========================
+   SMOOTH STAGGER EFFECT
+========================== */
+
+.gallery-card:nth-child(2){
+    animation-delay:.15s;
+}
+
+.gallery-card:nth-child(3){
+    animation-delay:.30s;
+}
+
+.gallery-card:nth-child(4){
+    animation-delay:.45s;
+}
+
+.gallery-card:nth-child(5){
+    animation-delay:.60s;
+}
+
+.gallery-card:nth-child(6){
+    animation-delay:.75s;
+}
+
+/* ===================================================
+   GALLERY PAGE
+   Part 3 : Before & After + Stats + Testimonials + CTA
+=================================================== */
+
+/* ==========================
+   BEFORE & AFTER
+========================== */
+
+.before-after{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:35px;
+    margin:90px 0;
+}
+
+.before-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:22px;
+    background:#181818;
+    border:1px solid rgba(255,255,255,.08);
+    transition:.4s ease;
+    box-shadow:0 15px 35px rgba(0,0,0,.30);
+}
+
+.before-card:hover{
+    transform:translateY(-10px);
+    border-color:#d4af37;
+    box-shadow:0 20px 45px rgba(212,175,55,.18);
+}
+
+.before-card img{
+    width:100%;
+    height:380px;
+    object-fit:cover;
+    display:block;
+    transition:.6s ease;
+}
+
+.before-card:hover img{
+    transform:scale(1.08);
+}
+
+.before-card span{
+    position:absolute;
+    top:20px;
+    left:20px;
+    background:#d4af37;
+    color:#111;
+    padding:10px 24px;
+    border-radius:40px;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:.5px;
+}
+
+/* ==========================
+   PROJECT STATS
+========================== */
+
+.gallery-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:25px;
+    margin:90px 0;
+}
+
+.stat{
+    background:#181818;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    padding:40px 20px;
+    text-align:center;
+    transition:.35s ease;
+}
+
+.stat:hover{
+    transform:translateY(-8px);
+    border-color:#d4af37;
+    box-shadow:0 15px 35px rgba(212,175,55,.18);
+}
+
+.stat h2{
+    color:#d4af37;
+    font-size:42px;
+    margin-bottom:12px;
+    font-weight:700;
+}
+
+.stat p{
+    color:#d7d7d7;
+    font-size:16px;
+    line-height:1.8;
+}
+
+/* ==========================
+   TESTIMONIALS
+========================== */
+
+.gallery-testimonials{
+    margin:100px 0;
+    text-align:center;
+}
+
+.gallery-testimonials h4{
+    color:#d4af37;
+    text-transform:uppercase;
+    letter-spacing:3px;
+    margin-bottom:15px;
+    font-size:16px;
+}
+
+.gallery-testimonials h2{
+    color:#fff;
+    font-size:42px;
+    margin-bottom:50px;
+}
+
+.testimonial-container{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:30px;
+}
+
+.testimonial-card{
+    background:#181818;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    padding:35px 28px;
+    transition:.4s ease;
+}
+
+.testimonial-card:hover{
+    transform:translateY(-10px);
+    border-color:#d4af37;
+    box-shadow:0 18px 40px rgba(212,175,55,.18);
+}
+
+.testimonial-card p{
+    color:#d8d8d8;
+    line-height:1.9;
+    font-size:15px;
+    margin-bottom:25px;
+    font-style:italic;
+}
+
+.testimonial-card h3{
+    color:#fff;
+    font-size:22px;
+    margin-bottom:6px;
+}
+
+.testimonial-card span{
+    color:#d4af37;
+    font-size:15px;
+}
+
+/* ==========================
+   CTA SECTION
+========================== */
+
+.gallery-cta{
+    margin-top:100px;
+    background:linear-gradient(135deg,#d4af37,#b9921f);
+    border-radius:25px;
+    padding:70px 50px;
+    text-align:center;
+}
+
+.gallery-cta h2{
+    color:#111;
+    font-size:42px;
+    margin-bottom:20px;
+    font-weight:700;
+}
+
+.gallery-cta p{
+    max-width:750px;
+    margin:0 auto 35px;
+    color:#222;
+    font-size:17px;
+    line-height:1.9;
+}
+
+.gallery-cta button{
+    border:none;
+    outline:none;
+    background:#111;
+    color:#fff;
+    padding:15px 40px;
+    border-radius:50px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:700;
+    transition:.35s ease;
+}
+
+.gallery-cta button:hover{
+    background:#fff;
+    color:#111;
+    transform:translateY(-4px);
+    box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+/* ===================================================
+   GALLERY PAGE
+   Part 4 : Responsive + Final Polish
+=================================================== */
+
+/* ==========================
+   LARGE LAPTOP
+========================== */
+
+@media (max-width:1200px){
+
+    .gallery{
+        padding:130px 5% 80px;
+    }
+
+    .gallery-heading h1{
+        font-size:48px;
+    }
+
+    .gallery-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .gallery-stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .testimonial-container{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+/* ==========================
+   TABLET
+========================== */
+
+@media (max-width:992px){
+
+    .gallery{
+        padding:120px 5% 70px;
+    }
+
+    .gallery-heading h1{
+        font-size:40px;
+    }
+
+    .gallery-heading p{
+        font-size:16px;
+    }
+
+    .gallery-grid{
+        grid-template-columns:1fr;
+        gap:30px;
+    }
+
+    .before-after{
+        grid-template-columns:1fr;
+    }
+
+    .gallery-stats{
+        grid-template-columns:repeat(2,1fr);
+        gap:20px;
+    }
+
+    .testimonial-container{
+        grid-template-columns:1fr;
+    }
+
+    .gallery-cta{
+        padding:60px 35px;
+    }
+
+    .gallery-cta h2{
+        font-size:34px;
+    }
+
+}
+
+/* ==========================
+   MOBILE
+========================== */
+
+@media (max-width:768px){
+
+    .gallery{
+        padding:100px 20px 60px;
+    }
+
+    .gallery-heading{
+        margin-bottom:50px;
+    }
+
+    .gallery-heading h4{
+        font-size:15px;
+        letter-spacing:2px;
+    }
+
+    .gallery-heading h1{
+        font-size:32px;
+    }
+
+    .gallery-heading p{
+        font-size:15px;
+        line-height:1.8;
+    }
+
+    .gallery-filter{
+        gap:10px;
+        margin-bottom:45px;
+    }
+
+    .gallery-filter button{
+        padding:10px 18px;
+        font-size:14px;
+    }
+
+    .gallery-card img{
+        height:260px;
+    }
+
+    .gallery-overlay{
+        padding:20px;
+    }
+
+    .gallery-overlay h3{
+        font-size:22px;
+    }
+
+    .gallery-overlay p{
+        font-size:14px;
+    }
+
+    .gallery-overlay button{
+        width:160px;
+        padding:11px 16px;
+        font-size:14px;
+    }
+
+    .before-card img{
+        height:260px;
+    }
+
+    .gallery-stats{
+        grid-template-columns:1fr;
+    }
+
+    .stat{
+        padding:30px 20px;
+    }
+
+    .stat h2{
+        font-size:34px;
+    }
+
+    .gallery-testimonials h2{
+        font-size:30px;
+    }
+
+    .testimonial-card{
+        padding:28px 22px;
+    }
+
+    .gallery-cta{
+        padding:45px 25px;
+    }
+
+    .gallery-cta h2{
+        font-size:28px;
+    }
+
+    .gallery-cta p{
+        font-size:15px;
+    }
+
+    .gallery-cta button{
+        width:100%;
+        max-width:260px;
+    }
+
+}
+
+/* ==========================
+   SMALL MOBILE
+========================== */
+
+@media (max-width:480px){
+
+    .gallery-heading h1{
+        font-size:28px;
+    }
+
+    .gallery-filter{
+        justify-content:center;
+    }
+
+    .gallery-filter button{
+        width:100%;
+        max-width:180px;
+    }
+
+    .gallery-card img{
+        height:220px;
+    }
+
+    .before-card img{
+        height:220px;
+    }
+
+    .gallery-overlay h3{
+        font-size:20px;
+    }
+
+    .gallery-overlay p{
+        font-size:13px;
+    }
+
+    .stat h2{
+        font-size:30px;
+    }
+
+    .gallery-cta h2{
+        font-size:24px;
+    }
+
+}
+
+/* ==========================
+   SMOOTH SCROLL
+========================== */
+
+html{
+    scroll-behavior:smooth;
+}
+
+/* ==========================
+   SELECTION COLOR
+========================== */
+
+::selection{
+    background:#d4af37;
+    color:#111;
+}

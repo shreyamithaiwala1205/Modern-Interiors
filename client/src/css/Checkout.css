@@ -1,0 +1,337 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Poppins",sans-serif;
+}
+
+.checkout-page{
+  min-height:100vh;
+  background:#111;
+  color:#fff;
+  padding:120px 6%;
+}
+
+.checkout-title{
+  text-align:center;
+  font-size:38px;
+  color:#D4AF37;
+  margin-bottom:40px;
+}
+
+.checkout-container{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:30px;
+}
+
+.checkout-form{
+  background:#1a1a1a;
+  padding:30px;
+  border-radius:16px;
+  border:1px solid #333;
+}
+
+.checkout-form h2{
+  color:#D4AF37;
+  margin-bottom:25px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  margin-bottom:18px;
+}
+
+.form-group label{
+  margin-bottom:8px;
+  color:#ccc;
+  font-size:15px;
+}
+
+.form-group input{
+  padding:13px 15px;
+  border:1px solid #444;
+  border-radius:10px;
+  background:#222;
+  color:#fff;
+  outline:none;
+  transition:.3s;
+}
+
+.form-group input:focus{
+  border-color:#D4AF37;
+}
+
+.form-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+
+.summary-card{
+  background:#1a1a1a;
+  border:1px solid #333;
+  border-radius:16px;
+  padding:25px;
+  height:max-content;
+  position:sticky;
+  top:110px;
+}
+
+.summary-card h2{
+  color:#D4AF37;
+  margin-bottom:20px;
+}
+
+.summary-item{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:12px;
+  color:#ddd;
+}
+
+.summary-total{
+  display:flex;
+  justify-content:space-between;
+  font-size:20px;
+  font-weight:700;
+  color:#D4AF37;
+  margin:20px 0;
+  padding-top:15px;
+  border-top:1px solid #333;
+}
+
+.place-order-btn{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:10px;
+  background:#D4AF37;
+  color:#111;
+  font-size:17px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.place-order-btn:hover{
+  background:#f2cb47;
+  transform:translateY(-2px);
+}
+
+.place-order-btn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.empty-cart{
+  text-align:center;
+  padding:80px 20px;
+}
+
+.empty-cart h2{
+  color:#D4AF37;
+  margin-bottom:10px;
+}
+
+.empty-cart p{
+  color:#aaa;
+}
+
+.error-text {
+  color: #ff6b6b;
+  font-size: 13px;
+  margin-top: 6px;
+  display: block;
+}
+
+/* Remove Chrome Autofill White Background */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+
+  -webkit-box-shadow: 0 0 0 30px #1c1c1c inset !important;
+
+  -webkit-text-fill-color: #ffffff !important;
+
+  transition: background-color 5000s ease-in-out 0s;
+
+}
+
+.form-group select{
+  padding:13px 15px;
+  border:1px solid #444;
+  border-radius:10px;
+  background:#222;
+  color:#fff;
+  outline:none;
+  width:100%;
+}
+
+.form-group select:focus{
+  border-color:#D4AF37;
+}
+
+.form-group option{
+  background:#222;
+  color:#fff;
+}
+
+/* React Select */
+
+.css-b62m3t-container{
+  width:100%;
+}
+
+.css-13cymwt-control{
+  background:#222 !important;
+  border:1px solid #444 !important;
+  min-height:48px !important;
+  border-radius:10px !important;
+}
+
+.css-13cymwt-control:hover{
+  border-color:#D4AF37 !important;
+}
+
+.css-t3ipsp-control{
+  background:#222 !important;
+  border:1px solid #D4AF37 !important;
+  box-shadow:none !important;
+}
+
+.css-1dimb5e-singleValue{
+  color:#fff !important;
+}
+
+.css-1jqq78o-placeholder{
+  color:#aaa !important;
+}
+
+.css-1nmdiq5-menu{
+  background:#222 !important;
+}
+
+.css-d7l1ni-option{
+  background:#D4AF37 !important;
+  color:#111 !important;
+}
+
+.css-10wo9uf-option{
+  color:#fff !important;
+}
+
+.css-166bipr-Input{
+  color:#fff !important;
+}
+
+@media(max-width:992px){
+
+.checkout-container{
+  grid-template-columns:1fr;
+}
+
+.summary-card{
+  position:static;
+}
+
+}
+
+.coupon-box{
+
+display:flex;
+
+gap:10px;
+
+margin:20px 0;
+
+}
+
+.coupon-box input{
+
+flex:1;
+
+padding:12px;
+
+background:#222;
+
+border:1px solid #444;
+
+border-radius:10px;
+
+color:#fff;
+
+outline:none;
+
+}
+
+.coupon-box input:focus{
+
+border-color:#D4AF37;
+
+}
+
+.coupon-box button{
+
+padding:12px 18px;
+
+background:#D4AF37;
+
+border:none;
+
+border-radius:10px;
+
+cursor:pointer;
+
+font-weight:600;
+
+transition:.3s;
+
+}
+
+.coupon-box button:hover{
+
+background:#f2cb47;
+
+}
+
+.coupon-success{
+
+margin-top:-10px;
+
+margin-bottom:15px;
+
+font-size:14px;
+
+color:#4CAF50;
+
+font-weight:600;
+
+}
+
+@media(max-width:600px){
+
+.checkout-page{
+  padding:100px 20px;
+}
+
+.checkout-title{
+  font-size:30px;
+}
+
+.form-row{
+  grid-template-columns:1fr;
+}
+
+.checkout-form{
+  padding:20px;
+}
+
+.summary-card{
+  padding:20px;
+}
+
+}

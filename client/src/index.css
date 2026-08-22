@@ -1,0 +1,39 @@
+html,body,#root{
+  width:100%;
+  min-height:100%;
+  overflow-x:hidden;
+}
+
+body{
+  font-family:'Poppins',sans-serif;
+  background:#111;
+  color:#fff;
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+img{
+  max-width:100%;
+  display:block;
+}
+
+section{
+  width:100%;
+}
+
+.auth-wrapper{
+
+    min-height:calc(100vh - 90px);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:40px 20px;
+
+}

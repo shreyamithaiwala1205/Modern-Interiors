@@ -1,0 +1,187 @@
+.auth-wrapper{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding-top:90px;
+    padding-left:20px;
+    padding-right:20px;
+    padding-bottom:20px;
+    background:#111;
+}
+
+.login-box{
+    width:100%;
+    max-width:420px;
+    background:#1b1b1b;
+    padding:45px;
+    border-radius:15px;
+    border:1px solid rgba(212,175,55,.25);
+    box-shadow:0 15px 40px rgba(0,0,0,.45);
+}
+
+.login-box h1{
+    color:#fff;
+    font-size:40px;
+    margin-bottom:10px;
+}
+
+.login-box p{
+    color:#bbb;
+    margin-bottom:30px;
+}
+
+.input-box{
+    position:relative;
+    margin-bottom:20px;
+}
+
+.input-box input{
+    width:100%;
+    padding:15px 45px;
+    border:none;
+    outline:none;
+    background:#2a2a2a;
+    color:#fff;
+    border-radius:8px;
+    font-size:15px;
+}
+
+.input-box input:focus{
+    border:1px solid #D4AF37;
+}
+
+.input-icon{
+    position:absolute;
+    top:17px;
+    left:15px;
+    color:#D4AF37;
+}
+
+.login-box button{
+    width:100%;
+    padding:15px;
+    border:none;
+    background:#D4AF37;
+    color:#111;
+    font-size:16px;
+    font-weight:bold;
+    border-radius:8px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.login-box button:hover{
+    background:#fff;
+}
+
+.login-box button:disabled{
+    opacity:.7;
+    cursor:not-allowed;
+}
+
+/* ==========================
+   OTP TIMER
+========================== */
+
+.otp-timer{
+    text-align:center;
+    color:#D4AF37;
+    font-size:15px;
+    margin-bottom:20px;
+}
+
+.expired{
+    color:#ff4d4d;
+    font-weight:600;
+}
+
+/* ==========================
+   RESEND OTP
+========================== */
+
+.resend-box{
+    text-align:center;
+    margin-top:20px;
+}
+
+.resend-box p{
+    color:#bbb;
+    margin-bottom:12px;
+}
+
+.resend-btn{
+    background:none;
+    border:none;
+    color:#D4AF37;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.resend-btn:hover{
+    color:#fff;
+    text-decoration:underline;
+}
+
+/* ==========================
+   BACK LINK
+========================== */
+
+.back-login{
+    margin-top:20px;
+    text-align:center;
+}
+
+.back-login a{
+    color:#D4AF37;
+    text-decoration:none;
+    font-size:15px;
+    font-weight:500;
+    transition:.3s;
+}
+
+.back-login a:hover{
+    color:#fff;
+    text-decoration:underline;
+}
+
+.otp-timer{
+    text-align:center;
+    margin:15px 0;
+}
+
+.timer-text{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:8px;
+    color:#D4AF37;
+    font-size:15px;
+}
+
+.timer-icon{
+    font-size:16px;
+}
+
+.expired{
+    color:#ff4d4f;
+    font-weight:600;
+}
+
+/* ==========================
+   RESPONSIVE
+========================== */
+
+@media(max-width:500px){
+
+    .login-box{
+        padding:30px 20px;
+    }
+
+    .login-box h1{
+        font-size:34px;
+    }
+
+}

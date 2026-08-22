@@ -1,0 +1,225 @@
+.footer{
+
+    background:#0d0d0d;
+
+    padding-top:80px;
+
+    color:#fff;
+
+    border-top:1px solid rgba(212,175,55,.15);
+
+}
+
+.footer-container{
+
+    width:90%;
+
+    max-width:1400px;
+
+    margin:auto;
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+
+    gap:50px;
+
+    padding-bottom:60px;
+
+}
+
+.footer-logo{
+
+    font-size:34px;
+
+    margin-bottom:20px;
+
+}
+
+.footer-logo span{
+
+    color:#D4AF37;
+
+}
+
+.footer-box p{
+
+    color:#bbb;
+
+    line-height:1.8;
+
+    margin-bottom:15px;
+
+}
+
+.footer-box h3{
+
+    color:#fff;
+
+    margin-bottom:22px;
+
+    font-size:24px;
+
+    position:relative;
+
+}
+
+.footer-box h3::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    bottom:-8px;
+
+    width:55px;
+
+    height:2px;
+
+    background:#D4AF37;
+
+}
+
+.footer-box ul{
+
+    list-style:none;
+
+}
+
+.footer-box ul li{
+
+    margin-bottom:14px;
+
+    color:#bbb;
+
+    transition:.3s;
+
+}
+
+.footer-box ul li:hover{
+
+    color:#D4AF37;
+
+    transform:translateX(6px);
+
+}
+
+.footer-box ul li a{
+
+    color:#bbb;
+
+    text-decoration:none;
+
+    transition:.3s;
+
+}
+
+.footer-box ul li a:hover{
+
+    color:#D4AF37;
+
+}
+
+.social-links{
+
+    display:flex;
+
+    gap:15px;
+
+    margin-top:25px;
+
+}
+
+.social-links a{
+
+    width:45px;
+
+    height:45px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#1c1c1c;
+
+    color:#D4AF37;
+
+    font-size:18px;
+
+    transition:.35s;
+
+}
+
+.social-links a:hover{
+
+    background:#D4AF37;
+
+    color:#111;
+
+    transform:translateY(-5px);
+
+}
+
+.footer-icon{
+
+    color:#D4AF37;
+
+    margin-right:10px;
+
+}
+
+.footer-bottom{
+
+    text-align:center;
+
+    padding:25px;
+
+    color:#999;
+
+    border-top:1px solid rgba(255,255,255,.08);
+
+    font-size:15px;
+
+}
+
+@media(max-width:768px){
+
+.footer{
+
+padding-top:60px;
+
+}
+
+.footer-container{
+
+grid-template-columns:1fr;
+
+gap:40px;
+
+}
+
+.footer-logo{
+
+font-size:28px;
+
+}
+
+.footer-box h3{
+
+font-size:22px;
+
+}
+
+.footer-bottom{
+
+font-size:14px;
+
+}
+
+}

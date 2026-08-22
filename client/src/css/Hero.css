@@ -1,0 +1,218 @@
+.hero{
+    width:100%;
+    height:100vh;
+
+    position:relative;
+
+    display:flex;
+    align-items:center;
+
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+
+    overflow:hidden;
+
+    animation:zoomHero 18s infinite alternate;
+
+    /* 🔥 IMPORTANT FIX: navbar overlap issue */
+    padding-top:80px;
+    box-sizing:border-box;
+}
+
+/* Background zoom animation */
+@keyframes zoomHero{
+    from{
+        background-size:100%;
+    }
+    to{
+        background-size:110%;
+    }
+}
+
+/* Dark overlay */
+.hero-overlay{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.45);
+}
+
+/* Content wrapper */
+.hero-content{
+    position:relative;
+    z-index:10;
+
+    width:90%;
+    max-width:1400px;
+    margin:auto;
+
+    color:white;
+
+    /* extra safety spacing */
+    padding-top:20px;
+}
+
+/* Subtitle */
+.hero-subtitle{
+    display:inline-block;
+    color:#D4AF37;
+    font-size:20px;
+    letter-spacing:3px;
+    margin-bottom:20px;
+    text-transform:uppercase;
+}
+
+/* Heading */
+.hero h1{
+    font-size:78px;
+    line-height:1.1;
+    font-weight:800;
+    margin-bottom:25px;
+    max-width:800px;
+}
+
+/* Paragraph */
+.hero p{
+    font-size:22px;
+    line-height:1.8;
+    max-width:720px;
+    color:#ddd;
+    margin-bottom:40px;
+}
+
+/* Buttons wrapper */
+.hero-buttons{
+    display:flex;
+    gap:20px;
+}
+
+/* Gold button */
+.gold-btn{
+    background:#D4AF37;
+    color:black;
+    padding:18px 42px;
+    border-radius:8px;
+    font-size:18px;
+    font-weight:700;
+    text-decoration:none;
+    transition:.4s;
+}
+
+.gold-btn:hover{
+    transform:translateY(-6px);
+    box-shadow:0 12px 35px rgba(212,175,55,.5);
+}
+
+/* Outline button */
+.outline-btn{
+    padding:18px 42px;
+    border:2px solid #D4AF37;
+    background:transparent;
+    color:#fff;
+    border-radius:8px;
+    font-size:18px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.4s;
+}
+
+.outline-btn:hover{
+    background:#D4AF37;
+    color:#111;
+    transform:translateY(-6px);
+    box-shadow:0 12px 35px rgba(212,175,55,.45);
+}
+
+/* Scroll indicator */
+.scroll-down{
+    position:absolute;
+    bottom:40px;
+    left:50%;
+    transform:translateX(-50%);
+}
+
+.scroll-down span{
+    display:block;
+    width:28px;
+    height:45px;
+    border:2px solid #D4AF37;
+    border-radius:25px;
+    position:relative;
+}
+
+.scroll-down span::before{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:8px;
+    transform:translateX(-50%);
+    width:6px;
+    height:6px;
+    background:#D4AF37;
+    border-radius:50%;
+    animation:scroll 2s infinite;
+}
+
+@keyframes scroll{
+    0%{
+        opacity:0;
+        top:8px;
+    }
+    50%{
+        opacity:1;
+    }
+    100%{
+        opacity:0;
+        top:24px;
+    }
+}
+
+/* ========================= */
+/* RESPONSIVE DESIGN */
+/* ========================= */
+
+@media(max-width:992px){
+
+    .hero{
+        text-align:center;
+        padding-top:90px; /* extra safe for tablet navbar */
+    }
+
+    .hero h1{
+        font-size:52px;
+    }
+
+    .hero p{
+        font-size:18px;
+    }
+
+    .hero-buttons{
+        justify-content:center;
+        flex-wrap:wrap;
+    }
+}
+
+@media(max-width:576px){
+
+    .hero{
+        padding-top:100px; /* mobile navbar safety */
+    }
+
+    .hero h1{
+        font-size:40px;
+    }
+
+    .hero-subtitle{
+        font-size:16px;
+    }
+
+    .hero p{
+        font-size:16px;
+    }
+
+    .gold-btn,
+    .outline-btn{
+        padding:14px 28px;
+        font-size:16px;
+    }
+}
