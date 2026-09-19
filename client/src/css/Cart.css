@@ -263,6 +263,13 @@
   box-shadow: 0 12px 25px rgba(212,175,55,.35);
 }
 
+.checkout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .continue-btn {
   background: transparent;
   border: 2px solid #d4af37;

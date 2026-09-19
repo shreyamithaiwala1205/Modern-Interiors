@@ -1,18 +1,20 @@
+import React from "react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Loader from "../components/Loader";
 
 const AdminProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
 
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  if (!token || !user) {
-    return <Navigate to="/admin/login" replace />;
+  if (loading) {
+    return <Loader />;
   }
 
-  return user.role === "admin"
-    ? children
-    : <Navigate to="/" replace />;
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
 
+  return children;
 };
 
 export default AdminProtectedRoute;

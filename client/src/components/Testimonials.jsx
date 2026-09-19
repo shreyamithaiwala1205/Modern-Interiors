@@ -1,29 +1,33 @@
-import React from "react";
-import { FaQuoteLeft, FaStar } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { FaQuoteLeft, FaStar, FaRegStar } from "react-icons/fa";
 import "../css/Testimonials.css";
 
 function Testimonials() {
 
-  const testimonials = [
-    {
-      name: "Priya Shah",
-      role: "Home Owner",
-      review:
-        "Modern Interiors completely transformed our living space. Every detail was beautifully designed and the final result exceeded our expectations."
-    },
-    {
-      name: "Rahul Patel",
-      role: "Business Owner",
-      review:
-        "Professional team with creative ideas and excellent execution. The entire project was completed on time with premium quality."
-    },
-    {
-      name: "Neha Mehta",
-      role: "Villa Owner",
-      review:
-        "Highly recommended for anyone looking for elegant and luxurious interiors. Amazing craftsmanship and outstanding customer service."
-    }
-  ];
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+
+    const fetchFeatured = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5000/api/reviews/featured?limit=6"
+        );
+
+        setReviews(res.data.reviews || []);
+      } catch (error) {
+        console.error("Fetch Featured Reviews Error:", error);
+      }
+    };
+
+    fetchFeatured();
+
+  }, []);
+
+  if (reviews.length === 0) {
+    return null;
+  }
 
   return (
     <section className="testimonials">
@@ -43,27 +47,31 @@ function Testimonials() {
 
       <div className="testimonial-container">
 
-        {testimonials.map((item, index) => (
+        {reviews.map((item) => (
 
-          <div className="testimonial-card" key={index}>
+          <div className="testimonial-card" key={item._id}>
 
             <FaQuoteLeft className="quote-icon" />
 
             <div className="stars">
-              <FaStar />
-              <FaStar />
-              <FaStar />
-              <FaStar />
-              <FaStar />
+              {[1, 2, 3, 4, 5].map((n) =>
+                n <= item.rating ? (
+                  <FaStar key={n} />
+                ) : (
+                  <FaRegStar key={n} />
+                )
+              )}
             </div>
 
             <p className="review">
-              "{item.review}"
+              "{item.comment}"
             </p>
 
-            <h3>{item.name}</h3>
+            <h3>{item.user?.name || "Happy Customer"}</h3>
 
-            <span>{item.role}</span>
+            <span>
+              {item.target?.name || item.target?.title || item.targetType}
+            </span>
 
           </div>
 

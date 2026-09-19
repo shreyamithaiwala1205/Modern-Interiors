@@ -5,6 +5,41 @@ const transporter = require("../config/sendEmail");
 const User = require("../models/User");
 
 // ==========================================
+// Error Sanitizer Helper
+// ==========================================
+const handleAuthError = (
+  res,
+  error,
+  defaultMessage = "Service temporarily unavailable. Please try again later."
+) => {
+  console.error("AUTH_ERROR:", error);
+
+  const errMsg = error?.message || "";
+  const isDbOrNetwork =
+    errMsg.includes("ENOTFOUND") ||
+    errMsg.includes("ECONNREFUSED") ||
+    errMsg.includes("ETIMEDOUT") ||
+    errMsg.includes("Mongo") ||
+    errMsg.includes("Mongoose") ||
+    errMsg.includes("buffering") ||
+    errMsg.includes("timed out") ||
+    errMsg.includes("Topology") ||
+    errMsg.includes("getaddrinfo");
+
+  if (isDbOrNetwork) {
+    return res.status(500).json({
+      success: false,
+      message: "Database service temporarily unavailable. Please try again in a few moments.",
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: defaultMessage,
+  });
+};
+
+// ==========================================
 // Register User
 // ==========================================
 
@@ -57,14 +92,11 @@ const registerUser = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    return handleAuthError(
+      res,
+      error,
+      "Unable to complete registration. Please try again later."
+    );
   }
 };
 
@@ -139,14 +171,11 @@ const loginUser = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    return handleAuthError(
+      res,
+      error,
+      "Unable to sign in right now. Please try again later."
+    );
   }
 
 };
@@ -173,14 +202,11 @@ const getProfile = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    return handleAuthError(
+      res,
+      error,
+      "Unable to retrieve user profile."
+    );
   }
 
 };
@@ -502,14 +528,11 @@ const forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
-
+    return handleAuthError(
+      res,
+      error,
+      "Unable to send reset verification code. Please try again later."
+    );
   }
 
 };
@@ -571,14 +594,11 @@ const verifyOTP = async (req, res) => {
   }
 
   catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    return handleAuthError(
+      res,
+      error,
+      "Unable to verify code. Please try again."
+    );
   }
 
 };
@@ -636,14 +656,11 @@ const resetPassword = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    return handleAuthError(
+      res,
+      error,
+      "Unable to reset password. Please try again later."
+    );
   }
 
 };
@@ -709,14 +726,11 @@ const changePassword = async (req, res) => {
   }
 
   catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    return handleAuthError(
+      res,
+      error,
+      "Unable to change password. Please try again."
+    );
   }
 
 };
@@ -774,14 +788,11 @@ const updateProfile = async (req, res) => {
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
+    return handleAuthError(
+      res,
+      error,
+      "Unable to update profile. Please try again."
+    );
   }
 
 };

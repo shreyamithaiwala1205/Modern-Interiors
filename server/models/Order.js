@@ -34,6 +34,17 @@ const orderSchema = new mongoose.Schema(
           required: true,
         },
 
+        // Snapshot of the product at purchase time so order
+        // history stays intact even if the product is later
+        // deleted or hidden.
+        name: {
+          type: String,
+        },
+
+        image: {
+          type: String,
+        },
+
         quantity: {
           type: Number,
           required: true,
@@ -64,6 +75,16 @@ const orderSchema = new mongoose.Schema(
     deliveryCharge: {
       type: Number,
       default: 0,
+    },
+
+    discount: {
+      type: Number,
+      default: 0,
+    },
+
+    coupon: {
+      type: String,
+      default: "",
     },
 
     totalPrice: {

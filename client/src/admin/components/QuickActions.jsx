@@ -44,11 +44,11 @@ const QuickActions = () => {
         </Link>
 
         <Link
-          to="/admin/add-product"
+          to="/admin/projects"
           className="quick-card"
         >
           <PlusCircle size={35} />
-          <span>Add Product</span>
+          <span>Projects</span>
         </Link>
 
       </div>

@@ -9,22 +9,27 @@ import {
     Users,
     Sofa,
     ShoppingBag,
-    PlusCircle,
     CalendarDays,
     Tag,
     Mail,
     FolderKanban,
+    Layers,
+    MonitorCog,
+    MailCheck,
+    Star,
     LogOut,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
 
 const Sidebar = () => {
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     const logoutHandler = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-
-        navigate("/admin/login");
+        logout({ notify: false });
+        toast.success("Logged out successfully.");
+        navigate("/", { replace: true });
     };
 
     const navClass = ({ isActive }) =>
@@ -157,22 +162,49 @@ const Sidebar = () => {
                     <FolderKanban size={21} />
                     <span>Projects</span>
                 </NavLink>
-                
-                {/* INVENTORY */}
 
-                <div className="admin-sidebar-section-title inventory-title">
-                    INVENTORY
+                <NavLink
+                    to="/admin/project-categories"
+                    className={({ isActive }) =>
+                        `admin-sidebar-link ${
+                            isActive ? "active" : ""
+                        }`
+                    }
+                >
+                    <Layers size={21} />
+                    <span>Project Categories</span>
+                </NavLink>
+
+                <NavLink
+                    to="/admin/reviews"
+                    className={navClass}
+                >
+                    <Star size={21} />
+                    <span>Reviews</span>
+                </NavLink>
+
+
+                {/* WEBSITE */}
+
+                <div className="admin-sidebar-section-title">
+                    WEBSITE
                 </div>
 
 
-                {/* ADD PRODUCT */}
-
                 <NavLink
-                    to="/admin/add-product"
+                    to="/admin/home-settings"
                     className={navClass}
                 >
-                    <PlusCircle size={21} />
-                    <span>Add Product</span>
+                    <MonitorCog size={21} />
+                    <span>Home Page Sections</span>
+                </NavLink>
+
+                <NavLink
+                    to="/admin/email-settings"
+                    className={navClass}
+                >
+                    <MailCheck size={21} />
+                    <span>Email Notifications</span>
                 </NavLink>
 
             </div>

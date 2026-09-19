@@ -1,15 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+} from "react";
+
 import axios from "axios";
+
 import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+
 import {
   FaLock,
   FaEye,
   FaEyeSlash,
 } from "react-icons/fa";
+
 import toast from "react-hot-toast";
+
+import {
+  getFriendlyErrorMessage,
+} from "../utils/errorHandler";
+
+import "../css/ForgotPassword.css";
+
 
 function ResetPassword() {
 
@@ -17,18 +31,21 @@ function ResetPassword() {
 
   const location = useLocation();
 
-  const email = location.state?.email || "";
-  const otp = location.state?.otp || "";
 
-  useEffect(() => {
+  // =====================================================
+  // EMAIL + OTP FROM VERIFY OTP PAGE
+  // =====================================================
 
-    if (!email || !otp) {
+  const email =
+    location.state?.email || "";
 
-        navigate("/forgot-password");
+  const otp =
+    location.state?.otp || "";
 
-    }
 
-    }, [email, otp, navigate]);
+  // =====================================================
+  // STATES
+  // =====================================================
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -45,68 +62,178 @@ function ResetPassword() {
   const [loading, setLoading] =
     useState(false);
 
-  const handleSubmit = async (e) => {
 
-    e.preventDefault();
+  // =====================================================
+  // CHECK EMAIL + OTP
+  // =====================================================
 
-    if (!password || !confirmPassword) {
+  useEffect(() => {
 
-      return toast.error("Please fill all fields");
+    if (!email || !otp) {
 
-    }
-
-    if (password !== confirmPassword) {
-
-      return toast.error(
-        "Passwords do not match"
-      );
-
-    }
-
-    try {
-
-      setLoading(true);
-
-      const { data } = await axios.post(
-
-        "http://localhost:5000/api/auth/reset-password",
-
+      navigate(
+        "/forgot-password",
         {
-          email,
-          otp,
-          password,
+          replace: true,
         }
-
-      );
-
-      toast.success(data.message);
-
-      setTimeout(() => {
-
-        navigate("/account");
-
-      }, 1200);
-
-    }
-
-    catch (error) {
-
-      toast.error(
-
-        error.response?.data?.message ||
-        "Password Reset Failed"
-
       );
 
     }
 
-    finally {
+  }, [
+    email,
+    otp,
+    navigate,
+  ]);
 
-      setLoading(false);
 
-    }
+  // =====================================================
+  // RESET PASSWORD
+  // =====================================================
 
-  };
+  const handleResetPassword =
+    async (e) => {
+
+      e.preventDefault();
+
+
+      // ===============================================
+      // PASSWORD VALIDATION
+      // ===============================================
+
+      if (
+        !password.trim() ||
+        !confirmPassword.trim()
+      ) {
+
+        toast.error(
+          "Please fill in both password fields."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        password.length < 6
+      ) {
+
+        toast.error(
+          "Password must be at least 6 characters long."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        password !==
+        confirmPassword
+      ) {
+
+        toast.error(
+          "Passwords do not match. Please verify."
+        );
+
+        return;
+
+      }
+
+
+      // ===============================================
+      // API CALL
+      // ===============================================
+
+      try {
+
+        setLoading(true);
+
+
+        const { data } =
+          await axios.post(
+
+            "http://localhost:5000/api/auth/reset-password",
+
+            {
+              email,
+              otp,
+              password,
+            }
+
+          );
+
+
+        // =============================================
+        // SUCCESS
+        // =============================================
+
+        toast.success(
+          data.message ||
+          "Password reset successfully! Please log in."
+        );
+
+
+        setPassword("");
+
+        setConfirmPassword("");
+
+
+        setTimeout(() => {
+
+          navigate(
+            "/account",
+            {
+              replace: true,
+            }
+          );
+
+        }, 1200);
+
+      }
+
+      // ===============================================
+      // ERROR
+      // ===============================================
+
+      catch (error) {
+
+        console.error(
+          "RESET PASSWORD ERROR:",
+          error
+        );
+
+
+        const errorMsg =
+          getFriendlyErrorMessage(
+            error,
+            "Unable to reset password. Please try again."
+          );
+
+
+        toast.error(
+          errorMsg
+        );
+
+      }
+
+      // ===============================================
+      // FINALLY
+      // ===============================================
+
+      finally {
+
+        setLoading(false);
+
+      }
+
+    };
+
+
+  // =====================================================
+  // PAGE
+  // =====================================================
 
   return (
 
@@ -114,17 +241,42 @@ function ResetPassword() {
 
       <div className="login-box">
 
-        <h1>Reset Password</h1>
+
+        {/* ==========================================
+            TITLE
+        ========================================== */}
+
+        <h1>
+          Reset Password
+        </h1>
+
 
         <p>
           Enter your new password.
         </p>
 
-        <form onSubmit={handleSubmit}>
+
+        {/* ==========================================
+            FORM
+        ========================================== */}
+
+        <form
+          onSubmit={
+            handleResetPassword
+          }
+        >
+
+
+          {/* ========================================
+              NEW PASSWORD
+          ======================================== */}
 
           <div className="input-box">
 
-            <FaLock className="input-icon"/>
+            <FaLock
+              className="input-icon"
+            />
+
 
             <input
               type={
@@ -132,30 +284,62 @@ function ResetPassword() {
                   ? "text"
                   : "password"
               }
+
               placeholder="New Password"
-              value={password}
-              onChange={(e)=>
-                setPassword(e.target.value)
+
+              value={
+                password
               }
+
+              onChange={(e) => {
+
+                setPassword(
+                  e.target.value
+                );
+
+              }}
+
+              autoComplete="new-password"
+
+              minLength={6}
+
+              required
             />
+
 
             <span
               className="eye"
-              onClick={()=>
-                setShowPassword(!showPassword)
+
+              onClick={() =>
+                setShowPassword(
+                  !showPassword
+                )
               }
             >
+
               {showPassword
-                ? <FaEyeSlash/>
-                : <FaEye/>
+
+                ? <FaEyeSlash />
+
+                : <FaEye />
+
               }
+
             </span>
 
           </div>
 
+
+          {/* ========================================
+              CONFIRM PASSWORD
+          ======================================== */}
+
           <div className="input-box">
 
-            <FaLock className="input-icon"/>
+            <FaLock
+              className="input-icon"
+            />
+
 
             <input
               type={
@@ -163,28 +347,55 @@ function ResetPassword() {
                   ? "text"
                   : "password"
               }
+
               placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e)=>
-                setConfirmPassword(e.target.value)
+
+              value={
+                confirmPassword
               }
+
+              onChange={(e) => {
+
+                setConfirmPassword(
+                  e.target.value
+                );
+
+              }}
+
+              autoComplete="new-password"
+
+              minLength={6}
+
+              required
             />
+
 
             <span
               className="eye"
-              onClick={()=>
+
+              onClick={() =>
                 setShowConfirmPassword(
                   !showConfirmPassword
                 )
               }
             >
+
               {showConfirmPassword
-                ? <FaEyeSlash/>
-                : <FaEye/>
+
+                ? <FaEyeSlash />
+
+                : <FaEye />
+
               }
+
             </span>
 
           </div>
+
+
+          {/* ========================================
+              SUBMIT BUTTON
+          ======================================== */}
 
           <button
             type="submit"
@@ -192,10 +403,15 @@ function ResetPassword() {
           >
 
             {loading
+
               ? "Updating..."
-              : "Reset Password"}
+
+              : "Reset Password"
+
+            }
 
           </button>
+
 
         </form>
 
@@ -206,5 +422,6 @@ function ResetPassword() {
   );
 
 }
+
 
 export default ResetPassword;

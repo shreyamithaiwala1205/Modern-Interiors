@@ -16,9 +16,10 @@ import {
     MessageCircle,
     RefreshCw,
     X,
+    Download,
 } from "lucide-react";
 
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 import AdminLayout from "../AdminLayout";
 
@@ -312,6 +313,64 @@ const Contacts = () => {
         }
     };
 
+    const exportContactsCSV = () => {
+    if (contacts.length === 0) {
+        toast.error("No contacts available to export");
+        return;
+    }
+
+    const headers = [
+        "No.",
+        "Name",
+        "Email",
+        "Phone",
+        "Subject",
+        "Status",
+        "Date",
+        "Message",
+    ];
+
+    const rows = contacts.map((contact, index) => [
+        index + 1,
+        contact.name || "",
+        contact.email || "",
+        contact.phone || "",
+        contact.subject || "",
+        contact.status || "",
+        formatDate(contact.createdAt),
+        contact.message || "",
+    ]);
+
+    const csvContent = [
+        headers.join(","),
+        ...rows.map((row) =>
+            row
+                .map((value) =>
+                    `"${String(value).replace(/"/g, '""')}"`
+                )
+                .join(",")
+        ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "contacts.csv";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+    toast.success("Contacts exported successfully");
+};
+
     // =====================================================
     // DELETE
     // =====================================================
@@ -461,28 +520,37 @@ const Contacts = () => {
         );
     };
 
-    // =====================================================
-    // LOADING
-    // =====================================================
+/* =====================================================
+   LOADING
+===================================================== */
 
-    if (loading) {
-        return (
-            <AdminLayout>
-                <div className="contacts-loading">
+if (loading) {
 
-                    <RefreshCw
-                        size={32}
-                        className="contacts-loading-icon"
-                    />
+    return (
+        <AdminLayout>
+
+            <div className="contacts-page">
+
+                <div className="contacts-loading-screen">
+
+                    <div className="contacts-loader"></div>
 
                     <h2>
                         Loading Contacts...
                     </h2>
 
+                    <p>
+                        Please wait while contact data is loading.
+                    </p>
+
                 </div>
-            </AdminLayout>
-        );
-    }
+
+            </div>
+
+        </AdminLayout>
+    );
+
+}
 
     // =====================================================
     // ERROR
@@ -624,61 +692,53 @@ const Contacts = () => {
 
                 <div className="contacts-toolbar">
 
-                    <div className="contact-search">
+                    <div className="contacts-toolbar-left">
 
-                        <Search
-                            size={18}
-                        />
+                        <span className="total-contacts-text">
+                            Total Contacts: <strong>{total}</strong>
+                        </span>
 
-                        <input
-                            type="text"
-                            placeholder="Search name, email, phone or subject..."
-                            value={search}
-                            onChange={(e) => {
-                                setSearch(
-                                    e.target.value
-                                );
-
-                                setCurrentPage(
-                                    1
-                                );
-                            }}
-                        />
+                        <button
+                            type="button"
+                            className="export-contacts-btn"
+                            onClick={exportContactsCSV}
+                        >
+                            <Download size={16} />
+                            Export CSV
+                        </button>
 
                     </div>
 
-                    <select
-                        value={
-                            statusFilter
-                        }
-                        onChange={(e) => {
-                            setStatusFilter(
-                                e.target.value
-                            );
+                    <div className="contacts-toolbar-right">
 
-                            setCurrentPage(
-                                1
-                            );
-                        }}
-                    >
+                        <div className="contact-search">
+                            <Search size={18} />
 
-                        <option value="all">
-                            All Status
-                        </option>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                placeholder="Search name, email, phone or subject..."
+                            />
+                        </div>
 
-                        <option value="Unread">
-                            Unread
-                        </option>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => {
+                                setStatusFilter(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <option value="all">All Status</option>
+                            <option value="Unread">Unread</option>
+                            <option value="Read">Read</option>
+                            <option value="Replied">Replied</option>
+                        </select>
 
-                        <option value="Read">
-                            Read
-                        </option>
-
-                        <option value="Replied">
-                            Replied
-                        </option>
-
-                    </select>
+                    </div>
 
                 </div>
 

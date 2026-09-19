@@ -2,7 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 import { useWishlist } from "../context/WishlistContext";
-import getImageUrl from "../utils/imageUrl";
+import { useCart } from "../context/CartContext";
+import ProductImage from "../components/ProductImage";
 
 import {
   FaHeart,
@@ -19,6 +20,8 @@ function Wishlist() {
     wishlist,
     removeWishlist,
   } = useWishlist();
+
+  const { addToCart } = useCart();
 
   return (
     <section className="wishlist-page">
@@ -62,18 +65,25 @@ function Wishlist() {
 
         <div className="wishlist-grid">
 
-          {wishlist.map((item) => (
+          {wishlist.map((entry) => {
+
+            const item = entry.furniture;
+            const unavailable =
+              !item || item.isVisible === false;
+
+            return (
 
             <div
               className="wishlist-card"
-              key={item._id}
+              key={entry._id}
             >
 
               <div className="wishlist-image">
 
-                <img
-                  src={getImageUrl(item.image)}
-                  alt={item.name}
+                <ProductImage
+                  image={item?.image}
+                  alt={item?.name || "Unavailable product"}
+                  unavailable={unavailable}
                 />
 
               </div>
@@ -81,81 +91,99 @@ function Wishlist() {
               <div className="wishlist-content">
 
                 <h2>
-                  {item.name}
+                  {item?.name || "Product Unavailable"}
                 </h2>
 
-                <h3>
-                  ₹
-                  {Number(
-                    item.priceValue || 0
-                  ).toLocaleString()}
-                </h3>
+                {unavailable ? (
 
-                <div className="wishlist-rating">
+                  <p className="unavailable-label">
+                    Product no longer available
+                  </p>
 
-                  {"★".repeat(
-                    Math.floor(
-                      Number(
-                        item.rating || 0
-                      )
-                    )
-                  )}
+                ) : (
 
-                  {"☆".repeat(
-                    Math.max(
-                      0,
-                      5 -
+                  <>
+
+                    <h3>
+                      ₹
+                      {Number(
+                        item.priceValue || 0
+                      ).toLocaleString()}
+                    </h3>
+
+                    <div className="wishlist-rating">
+
+                      {"★".repeat(
                         Math.floor(
                           Number(
                             item.rating || 0
                           )
                         )
-                    )
-                  )}
+                      )}
 
-                  <span>
-                    ({item.rating || 0})
-                  </span>
+                      {"☆".repeat(
+                        Math.max(
+                          0,
+                          5 -
+                            Math.floor(
+                              Number(
+                                item.rating || 0
+                              )
+                            )
+                        )
+                      )}
 
-                </div>
+                      <span>
+                        ({item.rating || 0})
+                      </span>
+
+                    </div>
+
+                  </>
+
+                )}
 
                 <div className="wishlist-buttons">
 
-                  <Link
-                    to={`/product/${item._id}`}
-                    className="view-btn"
-                  >
+                  {!unavailable && (
 
-                    <FaEye />
+                    <>
 
-                    <span>
-                      View Details
-                    </span>
+                      <Link
+                        to={`/product/${item._id}`}
+                        className="view-btn"
+                      >
 
-                  </Link>
+                        <FaEye />
 
-                  <button
-                    className="cart-btn"
-                    onClick={() =>
-                      alert(
-                        "Add To Cart feature coming next."
-                      )
-                    }
-                  >
+                        <span>
+                          View Details
+                        </span>
 
-                    <FaShoppingCart />
+                      </Link>
 
-                    <span>
-                      Add To Cart
-                    </span>
+                      <button
+                        className="cart-btn"
+                        onClick={() => addToCart(item)}
+                      >
 
-                  </button>
+                        <FaShoppingCart />
+
+                        <span>
+                          Add To Cart
+                        </span>
+
+                      </button>
+
+                    </>
+
+                  )}
 
                   <button
                     className="remove-btn"
                     onClick={() =>
                       removeWishlist(
-                        item._id
+                        entry._id
                       )
                     }
                   >
@@ -174,7 +202,9 @@ function Wishlist() {
 
             </div>
 
-          ))}
+            );
+
+          })}
 
         </div>
 

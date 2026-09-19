@@ -6,6 +6,7 @@ import React, {
 import axios from "axios";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
+import { FaExclamationCircle, FaShieldAlt, FaLock, FaTag, FaCheckCircle, FaTimes } from "react-icons/fa";
 
 import { useCart } from "../context/CartContext";
 
@@ -22,32 +23,38 @@ function Checkout() {
   } = useCart();
 
   const [loading, setLoading] = useState(false);
-
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const token = localStorage.getItem("token");
 
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
 
+  // Coupons State
+  const [couponsList, setCouponsList] = useState([]);
+  const [fetchingCoupons, setFetchingCoupons] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [manualCodeMode, setManualCodeMode] = useState(false);
+
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [finalAmount, setFinalAmount] = useState(0);
   const [couponMessage, setCouponMessage] = useState("");
 
-  const customSelectStyles = {
+  const getSelectStyles = (isError) => ({
     control: (provided, state) => ({
       ...provided,
-      backgroundColor: "#222",
+      backgroundColor: isError ? "#261818" : "#222",
       opacity: state.isDisabled ? 0.7 : 1,
       cursor: state.isDisabled ? "not-allowed" : "pointer",
-      borderColor: state.isFocused ? "#D4AF37" : "#444",
+      borderColor: isError ? "#ef4444" : state.isFocused ? "#D4AF37" : "#444",
       borderRadius: "10px",
       minHeight: "48px",
-      boxShadow: "none",
+      boxShadow: isError ? "0 0 8px rgba(239, 68, 68, 0.25)" : "none",
       color: "#fff",
       "&:hover": {
-        borderColor: "#D4AF37",
+        borderColor: isError ? "#ef4444" : "#D4AF37",
       },
     }),
 
@@ -63,7 +70,7 @@ function Checkout() {
 
     placeholder: (provided) => ({
       ...provided,
-      color: "#888",
+      color: isError ? "#fca5a5" : "#888",
     }),
 
     menu: (provided) => ({
@@ -71,11 +78,7 @@ function Checkout() {
       backgroundColor: "#222",
       border: "1px solid #444",
       borderRadius: "10px",
-    }),
-
-    input: (provided) => ({
-      ...provided,
-      color: "#fff",
+      zIndex: 99,
     }),
 
     option: (provided, state) => ({
@@ -89,7 +92,7 @@ function Checkout() {
 
     dropdownIndicator: (provided) => ({
       ...provided,
-      color: "#D4AF37",
+      color: isError ? "#ef4444" : "#D4AF37",
     }),
 
     indicatorSeparator: () => ({
@@ -98,9 +101,9 @@ function Checkout() {
 
     clearIndicator: (provided) => ({
       ...provided,
-      color: "#D4AF37",
+      color: isError ? "#ef4444" : "#D4AF37",
     }),
-  };
+  });
 
   const stateOptions = states.map((state) => ({
     value: state.name,
@@ -123,82 +126,137 @@ function Checkout() {
   });
 
   // ===========================
+  // Validate Single Field
+  // ===========================
+  const validateField = (name, value, allData = formData) => {
+    switch (name) {
+      case "fullName": {
+        const val = (value || "").trim();
+        if (!val) {
+          return "Full Name is required.";
+        }
+        if (!/^[A-Za-z\s]{2,50}$/.test(val)) {
+          return "Name must contain only letters and spaces (2 to 50 characters).";
+        }
+        return "";
+      }
+
+      case "phone": {
+        const val = (value || "").trim();
+        if (!val) {
+          return "Phone number is required.";
+        }
+        const digits = val.replace(/\D/g, "");
+        if (digits.length !== 10) {
+          return "Phone number must be exactly 10 digits.";
+        }
+        return "";
+      }
+
+      case "email": {
+        const val = (value || "").trim();
+        if (!val) {
+          return "Email address is required.";
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+          return "Please enter a valid email address (e.g. name@example.com).";
+        }
+        return "";
+      }
+
+      case "address": {
+        const val = (value || "").trim();
+        if (!val) {
+          return "Delivery address is required.";
+        }
+        if (val.length < 5) {
+          return "Please enter a complete delivery address (min 5 characters).";
+        }
+        if (val.length > 200) {
+          return "Address cannot exceed 200 characters.";
+        }
+        return "";
+      }
+
+      case "state": {
+        if (!value || !value.trim()) {
+          return "Please select a state.";
+        }
+        return "";
+      }
+
+      case "city": {
+        if (!value || !value.trim()) {
+          return "Please select a city.";
+        }
+        return "";
+      }
+
+      case "pincode": {
+        const val = (value || "").trim();
+        if (!val) {
+          return "Pincode is required.";
+        }
+        if (!/^\d{6}$/.test(val)) {
+          return "Pincode must be exactly 6 digits.";
+        }
+        return "";
+      }
+
+      default:
+        return "";
+    }
+  };
+
+  // ===========================
+  // Validate Entire Form
+  // ===========================
+  const validateForm = () => {
+    const newErrors = {};
+    Object.keys(formData).forEach((field) => {
+      const err = validateField(field, formData[field], formData);
+      if (err) {
+        newErrors[field] = err;
+      }
+    });
+    setErrors(newErrors);
+    return newErrors;
+  };
+
+  // ===========================
   // Handle Input Change
   // ===========================
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
 
- const handleChange = async (e) => {
-  const { name, value } = e.target;
+    const updated = {
+      ...formData,
+      [name]: value,
+    };
 
-    if (name === "state") {
+    setFormData(updated);
 
-    setFormData((prev) => ({
-      ...prev,
-      state: value,
-      city: "",
-    }));
+    if (touched[name]) {
+      const err = validateField(name, value, updated);
+      setErrors((prev) => ({
+        ...prev,
+        [name]: err,
+      }));
+    }
+  };
 
+  // ===========================
+  // Handle Input Blur
+  // ===========================
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    const err = validateField(name, value, formData);
     setErrors((prev) => ({
       ...prev,
-      state: "",
-      city: "",
+      [name]: err,
     }));
-
-    setCities([]);
-
-    await fetchCities(value);
-
-    return;
-  }
-
-  setFormData((prev) => ({
-    ...prev,
-    [name]: value,
-  }));
-
-  setErrors((prev) => ({
-    ...prev,
-    [name]: "",
-  }));
-};
-
-  const validateForm = () => {
-
-  let newErrors = {};
-
-  if (!formData.fullName.trim()) {
-    newErrors.fullName = "Full Name is required";
-  }
-
-  if (!/^[6-9]\d{9}$/.test(formData.phone)) {
-    newErrors.phone = "Enter valid mobile number";
-  }
-
-  if (
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-  ) {
-    newErrors.email = "Enter valid email";
-  }
-
-  if (!formData.address.trim()) {
-    newErrors.address = "Address is required";
-  }
-
-  if (!formData.city.trim()) {
-    newErrors.city = "Select City";
-  }
-
-  if (!formData.state.trim()) {
-    newErrors.state = "Select State";
-  }
-
-  if (!/^\d{6}$/.test(formData.pincode)) {
-    newErrors.pincode = "Enter valid pincode";
-  }
-
-  setErrors(newErrors);
-
-  return Object.keys(newErrors).length === 0;
-};
+  };
 
   // ===========================
   // Load Razorpay Script
@@ -271,10 +329,39 @@ function Checkout() {
 
   const grandTotal = totalPrice + deliveryCharge;
 
+  // Active coupons filtered by minimum order requirement condition
+  const applicableCoupons = useMemo(() => {
+    return couponsList.filter(
+      (c) => c.active && grandTotal >= (c.minAmount || 0)
+    );
+  }, [couponsList, grandTotal]);
+
+  const lockedCoupons = useMemo(() => {
+    return couponsList.filter(
+      (c) => c.active && grandTotal < (c.minAmount || 0)
+    );
+  }, [couponsList, grandTotal]);
+
+  // Recalculate or revalidate coupon when grandTotal changes
   useEffect(() => {
-
-    setFinalAmount(grandTotal);
-
+    if (appliedCoupon && couponCode) {
+      if (grandTotal < (appliedCoupon.minAmount || 0)) {
+        setDiscount(0);
+        setFinalAmount(grandTotal);
+        setCouponMessage("");
+        setAppliedCoupon(null);
+        setCouponCode("");
+        toast.error(`Coupon ${appliedCoupon.code} removed: Cart total is now below minimum order requirement of ₹${(appliedCoupon.minAmount || 0).toLocaleString("en-IN")}.`);
+      } else {
+        const discPercent = appliedCoupon.discount || 0;
+        const discountAmt = Math.round((grandTotal * discPercent) / 100);
+        setDiscount(discountAmt);
+        setFinalAmount(Math.max(grandTotal - discountAmt, 0));
+      }
+    } else {
+      setDiscount(0);
+      setFinalAmount(grandTotal);
+    }
   }, [grandTotal]);
 
   // ===========================
@@ -372,85 +459,105 @@ function Checkout() {
   };
 
   // ===========================
-  // Auto Fill
+  // Fetch Active Coupons
   // ===========================
+  const fetchActiveCoupons = async () => {
+    try {
+      setFetchingCoupons(true);
+      const res = await axios.get("http://localhost:5000/api/coupon/active");
+      if (res.data?.success && Array.isArray(res.data.coupons)) {
+        setCouponsList(res.data.coupons);
+      }
+    } catch (err) {
+      console.log("FETCH ACTIVE COUPONS ERROR:", err);
+    } finally {
+      setFetchingCoupons(false);
+    }
+  };
 
+  // ===========================
+  // Auto Fill & Init
+  // ===========================
   useEffect(() => {
-
     fetchProfile();
-
     fetchStates();
-
+    fetchActiveCoupons();
   }, []);
 
-    const applyCoupon = async () => {
+  // Apply Coupon by code string
+  const applyCouponWithCode = async (codeToApply) => {
+    const code = (codeToApply !== undefined ? codeToApply : couponCode || "").trim().toUpperCase();
 
-      if (!couponCode.trim()) {
-
-        toast.error("Enter Coupon Code");
-
-        return;
-
-      }
-
-      try {
-
-        const { data } = await axios.post(
-
-          "http://localhost:5000/api/coupon/apply",
-
-          {
-
-            code: couponCode,
-
-            totalAmount: grandTotal,
-
-          }
-
-        );
-
-        setDiscount(data.discountAmount);
-
-        setFinalAmount(data.finalAmount);
-
-        setCouponMessage(data.message);
-
-        toast.success(data.message);
-
-      }
-
-      catch (error) {
-
-        setDiscount(0);
-
-        setFinalAmount(grandTotal);
-
-        setCouponMessage("");
-
-        toast.error(
-
-          error.response?.data?.message ||
-
-          "Invalid Coupon"
-
-        );
-
-      }
-
-    };
-
-    const handlePayment = async (e) => {
-
-      e.preventDefault();
-
-    if (!validateForm()) {
+    if (!code) {
+      toast.error("Please select or enter a coupon code");
       return;
     }
+
+    try {
+      const { data } = await axios.post(
+        "http://localhost:5000/api/coupon/apply",
+        {
+          code,
+          totalAmount: grandTotal,
+          cartTotal: grandTotal,
+        }
+      );
+
+      setCouponCode(code);
+      setDiscount(data.discountAmount);
+      setFinalAmount(data.finalAmount);
+      setCouponMessage(data.message || `Coupon ${code} applied successfully!`);
+      const matched = couponsList.find((c) => c.code === code);
+      setAppliedCoupon(data.coupon || matched || { code, discount: data.discountAmount });
+      toast.success(`Coupon ${code} applied! Saved ₹${data.discountAmount.toLocaleString("en-IN")}`);
+    } catch (error) {
+      setDiscount(0);
+      setFinalAmount(grandTotal);
+      setCouponMessage("");
+      setAppliedCoupon(null);
+      toast.error(
+        error.response?.data?.message || "Invalid or inapplicable coupon"
+      );
+    }
+  };
+
+  // Remove applied coupon
+  const removeCoupon = () => {
+    setCouponCode("");
+    setDiscount(0);
+    setFinalAmount(grandTotal);
+    setCouponMessage("");
+    setAppliedCoupon(null);
+    toast.success("Coupon removed");
+  };
+
+    const handlePayment = async (e) => {
+      e.preventDefault();
+
+      const allTouched = {
+        fullName: true,
+        phone: true,
+        email: true,
+        address: true,
+        state: true,
+        city: true,
+        pincode: true,
+      };
+      setTouched(allTouched);
+
+      const validationErrors = validateForm();
+      const errorKeys = Object.keys(validationErrors);
+
+      if (errorKeys.length > 0) {
+        const firstError = validationErrors[errorKeys[0]];
+        toast.error(firstError || "Please fill in all shipping details correctly.");
+        return;
+      }
 
     const token = localStorage.getItem("token");
 
     if (!token) {
-      toast.error("Please Login First");
+      toast.error("Please log in to continue with checkout.");
       return;
     }
 
@@ -504,6 +611,9 @@ function Checkout() {
               {
 
                 ...formData,
+                coupon: couponCode || "",
+                discount,
+                totalPrice: finalAmount,
 
                 payment: {
 
@@ -640,32 +750,40 @@ function Checkout() {
 
       <div className="checkout-container">
 
-        {/* LEFT SIDE */}
-
-        <form
+        {/* LEFT SIDE */}        <form
           id="checkoutForm"
           className="checkout-form"
+          noValidate
+          onSubmit={handlePayment}
         >
 
           <h2>Shipping Details</h2>
 
           <div className="form-group">
 
-            <label>Full Name</label>
+            <label>Full Name *</label>
 
             <input
               type="text"
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              placeholder="Enter Full Name"
-              required
+              onBlur={handleBlur}
+              placeholder="Enter Full Name (e.g. John Doe)"
+              className={
+                errors.fullName && touched.fullName
+                  ? "input-error"
+                  : touched.fullName && !errors.fullName
+                  ? "input-valid"
+                  : ""
+              }
             />
 
-            {errors.fullName && (
-              <small className="error-text">
-                {errors.fullName}
-              </small>
+            {errors.fullName && touched.fullName && (
+              <div className="error-message">
+                <FaExclamationCircle />
+                <span>{errors.fullName}</span>
+              </div>
             )}
 
           </div>
@@ -674,42 +792,59 @@ function Checkout() {
 
             <div className="form-group">
 
-              <label>Phone Number</label>
+              <label>Phone Number *</label>
 
               <input
-                type="text"
+                type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="9876543210"
-                required
+                onBlur={handleBlur}
+                maxLength={10}
+                placeholder="10-Digit Mobile Number (e.g. 9876543210)"
+                className={
+                  errors.phone && touched.phone
+                    ? "input-error"
+                    : touched.phone && !errors.phone
+                    ? "input-valid"
+                    : ""
+                }
               />
 
-              {errors.phone && (
-                <small className="error-text">
-                  {errors.phone}
-                </small>
+              {errors.phone && touched.phone && (
+                <div className="error-message">
+                  <FaExclamationCircle />
+                  <span>{errors.phone}</span>
+                </div>
               )}
 
             </div>
 
             <div className="form-group">
 
-              <label>Email Address</label>
+              <label>Email Address *</label>
 
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="example@gmail.com"
-                required
+                className={
+                  errors.email && touched.email
+                    ? "input-error"
+                    : touched.email && !errors.email
+                    ? "input-valid"
+                    : ""
+                }
               />
 
-              {errors.email && (
-                <small className="error-text">
-                  {errors.email}
-                </small>
+              {errors.email && touched.email && (
+                <div className="error-message">
+                  <FaExclamationCircle />
+                  <span>{errors.email}</span>
+                </div>
               )}
 
             </div>
@@ -718,21 +853,29 @@ function Checkout() {
 
           <div className="form-group">
 
-            <label>Address</label>
+            <label>Delivery Address *</label>
 
             <input
               type="text"
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="Street, Area"
-              required
+              onBlur={handleBlur}
+              placeholder="House/Flat No., Building Name, Street, Area"
+              className={
+                errors.address && touched.address
+                  ? "input-error"
+                  : touched.address && !errors.address
+                  ? "input-valid"
+                  : ""
+              }
             />
 
-            {errors.address && (
-              <small className="error-text">
-                {errors.address}
-              </small>
+            {errors.address && touched.address && (
+              <div className="error-message">
+                <FaExclamationCircle />
+                <span>{errors.address}</span>
+              </div>
             )}
 
           </div>
@@ -743,10 +886,10 @@ function Checkout() {
 
             <div className="form-group">
 
-              <label>State</label>
+              <label>State *</label>
 
               <Select
-                styles={customSelectStyles}
+                styles={getSelectStyles(errors.state && touched.state)}
                 options={stateOptions}
                 value={
                   stateOptions.find(
@@ -757,15 +900,24 @@ function Checkout() {
 
                   const value = selected ? selected.value : "";
 
-                  setFormData((prev) => ({
-                    ...prev,
+                  const updated = {
+                    ...formData,
                     state: value,
                     city: "",
+                  };
+
+                  setFormData(updated);
+
+                  setTouched((prev) => ({
+                    ...prev,
+                    state: true,
                   }));
+
+                  const stateErr = validateField("state", value, updated);
 
                   setErrors((prev) => ({
                     ...prev,
-                    state: "",
+                    state: stateErr,
                     city: "",
                   }));
 
@@ -775,14 +927,20 @@ function Checkout() {
                     await fetchCities(value);
                   }
                 }}
+                onBlur={() => {
+                  setTouched((prev) => ({ ...prev, state: true }));
+                  const err = validateField("state", formData.state, formData);
+                  setErrors((prev) => ({ ...prev, state: err }));
+                }}
                 placeholder="Search State..."
                 isClearable
               />
 
-              {errors.state && (
-                <small className="error-text">
-                  {errors.state}
-                </small>
+              {errors.state && touched.state && (
+                <div className="error-message">
+                  <FaExclamationCircle />
+                  <span>{errors.state}</span>
+                </div>
               )}
 
             </div>
@@ -791,10 +949,10 @@ function Checkout() {
 
             <div className="form-group">
 
-              <label>City</label>
+              <label>City *</label>
 
               <Select
-                styles={customSelectStyles}
+                styles={getSelectStyles(errors.city && touched.city)}
                 options={cityOptions}
                 value={
                   cityOptions.find(
@@ -803,15 +961,31 @@ function Checkout() {
                 }
                 onChange={(selected) => {
 
-                  setFormData((prev) => ({
+                  const value = selected ? selected.value : "";
+
+                  const updated = {
+                    ...formData,
+                    city: value,
+                  };
+
+                  setFormData(updated);
+
+                  setTouched((prev) => ({
                     ...prev,
-                    city: selected ? selected.value : "",
+                    city: true,
                   }));
+
+                  const cityErr = validateField("city", value, updated);
 
                   setErrors((prev) => ({
                     ...prev,
-                    city: "",
+                    city: cityErr,
                   }));
+                }}
+                onBlur={() => {
+                  setTouched((prev) => ({ ...prev, city: true }));
+                  const err = validateField("city", formData.city, formData);
+                  setErrors((prev) => ({ ...prev, city: err }));
                 }}
                 placeholder={
                   formData.state
@@ -822,10 +996,11 @@ function Checkout() {
                 isClearable
               />
 
-              {errors.city && (
-                <small className="error-text">
-                  {errors.city}
-                </small>
+              {errors.city && touched.city && (
+                <div className="error-message">
+                  <FaExclamationCircle />
+                  <span>{errors.city}</span>
+                </div>
               )}
 
             </div>
@@ -834,21 +1009,30 @@ function Checkout() {
 
           <div className="form-group">
 
-            <label>Pincode</label>
+            <label>Pincode *</label>
 
             <input
               type="text"
               name="pincode"
               value={formData.pincode}
               onChange={handleChange}
-              placeholder="380001"
-              required
+              onBlur={handleBlur}
+              maxLength={6}
+              placeholder="6-Digit Pincode (e.g. 380001)"
+              className={
+                errors.pincode && touched.pincode
+                  ? "input-error"
+                  : touched.pincode && !errors.pincode
+                  ? "input-valid"
+                  : ""
+              }
             />
 
-            {errors.pincode && (
-              <small className="error-text">
-                {errors.pincode}
-              </small>
+            {errors.pincode && touched.pincode && (
+              <div className="error-message">
+                <FaExclamationCircle />
+                <span>{errors.pincode}</span>
+              </div>
             )}
 
           </div>
@@ -871,52 +1055,148 @@ function Checkout() {
             <span>₹{totalPrice.toLocaleString()}</span>
           </div>
 
-          <div className="coupon-box">
+          {/* =========================================
+              COUPON DROPDOWN / SELECTOR SECTION
+          ========================================== */}
+          <div className="checkout-coupon-section">
+            <div className="checkout-coupon-header">
+              <label className="checkout-coupon-label">
+                <FaTag className="coupon-label-icon" />
+                <span>Apply Coupon</span>
+                {applicableCoupons.length > 0 && !appliedCoupon && (
+                  <span className="coupon-badge-count">
+                    {applicableCoupons.length} Available
+                  </span>
+                )}
+              </label>
 
-            <input
+              {!appliedCoupon && (
+                <button
+                  type="button"
+                  className="coupon-toggle-mode-btn"
+                  onClick={() => setManualCodeMode(!manualCodeMode)}
+                >
+                  {manualCodeMode ? "Select from list" : "Enter custom code"}
+                </button>
+              )}
+            </div>
 
-              type="text"
+            {/* APPLIED COUPON BADGE */}
+            {appliedCoupon && discount > 0 ? (
+              <div className="applied-coupon-card">
+                <div className="applied-coupon-info">
+                  <div className="applied-coupon-badge">
+                    <FaCheckCircle />
+                    <strong>{couponCode}</strong>
+                  </div>
+                  <span className="applied-coupon-savings">
+                    {appliedCoupon.discount ? `${appliedCoupon.discount}% OFF` : "Discount"} applied! (You save ₹{discount.toLocaleString("en-IN")})
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="remove-coupon-btn"
+                  onClick={removeCoupon}
+                  title="Remove this coupon"
+                >
+                  <FaTimes />
+                  <span>Remove</span>
+                </button>
+              </div>
+            ) : manualCodeMode ? (
+              /* MANUAL INPUT BOX */
+              <div className="coupon-box">
+                <input
+                  type="text"
+                  placeholder="Enter Coupon Code (e.g. MODERN20)"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyCouponWithCode(couponCode);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => applyCouponWithCode(couponCode)}
+                >
+                  Apply
+                </button>
+              </div>
+            ) : (
+              /* ACTIVE COUPONS DROPDOWN */
+              <div className="coupon-dropdown-box">
+                <select
+                  className="checkout-coupon-dropdown"
+                  value={couponCode}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    if (selected) {
+                      setCouponCode(selected);
+                      applyCouponWithCode(selected);
+                    } else {
+                      removeCoupon();
+                    }
+                  }}
+                >
+                  <option value="">
+                    {fetchingCoupons
+                      ? "Loading available coupons..."
+                      : applicableCoupons.length > 0
+                      ? `-- Select an Active Coupon (${applicableCoupons.length} Available) --`
+                      : "-- No Applicable Coupons for this Cart Value --"}
+                  </option>
 
-              placeholder="Enter Coupon"
+                  {applicableCoupons.length > 0 && (
+                    <optgroup label="✨ Applicable Coupons (Ready to Apply)">
+                      {applicableCoupons.map((c) => {
+                        const estimatedSavings = Math.round((grandTotal * c.discount) / 100);
+                        return (
+                          <option key={c._id || c.code} value={c.code}>
+                            🏷️ {c.code} — {c.discount}% OFF (Save ₹{estimatedSavings.toLocaleString("en-IN")}) {c.minAmount > 0 ? `[Min: ₹${c.minAmount.toLocaleString("en-IN")}]` : "[No Min Order]"}
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  )}
 
-              value={couponCode}
+                  {lockedCoupons.length > 0 && (
+                    <optgroup label="🔒 Locked Coupons (Cart Value Below Minimum)">
+                      {lockedCoupons.map((c) => {
+                        const needed = c.minAmount - grandTotal;
+                        return (
+                          <option key={c._id || c.code} value={c.code} disabled>
+                            🔒 {c.code} — {c.discount}% OFF (Requires Min ₹{c.minAmount.toLocaleString("en-IN")} — Add ₹{needed.toLocaleString("en-IN")} more)
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  )}
+                </select>
+              </div>
+            )}
 
-              onChange={(e)=>setCouponCode(e.target.value.toUpperCase())}
+            {/* HELPER HINT WHEN CART IS BELOW MIN AMOUNT */}
+            {!appliedCoupon && lockedCoupons.length > 0 && applicableCoupons.length === 0 && (
+              <p className="coupon-hint-notice">
+                💡 Tip: Add <strong>₹{(lockedCoupons[0].minAmount - grandTotal).toLocaleString("en-IN")}</strong> more to your cart to unlock coupon <strong>{lockedCoupons[0].code} ({lockedCoupons[0].discount}% OFF)</strong>!
+              </p>
+            )}
 
-            />
-
-            <button onClick={applyCoupon}>
-
-              Apply
-
-            </button>
-
+            {couponMessage && !appliedCoupon && (
+              <p className="coupon-success">{couponMessage}</p>
+            )}
           </div>
-
-          {couponMessage && (
-
-          <p className="coupon-success">
-
-            {couponMessage}
-
-          </p>
-
-          )}
 
           {discount > 0 && (
-
-          <div className="summary-item">
-
-            <span>Discount</span>
-
-            <span style={{color:"#4CAF50"}}>
-
-              -₹{discount.toLocaleString()}
-
-            </span>
-
-          </div>
-
+            <div className="summary-item discount-item">
+              <span>Discount ({appliedCoupon?.discount || ""}% OFF)</span>
+              <span className="discount-amount">
+                -₹{discount.toLocaleString()}
+              </span>
+            </div>
           )}
 
           <div className="summary-item">

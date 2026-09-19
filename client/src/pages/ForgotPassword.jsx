@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEnvelope } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { getFriendlyErrorMessage } from "../utils/errorHandler";
 import "../css/ForgotPassword.css";
 
 function ForgotPassword() {
@@ -16,8 +17,8 @@ function ForgotPassword() {
 
     e.preventDefault();
 
-    if (!email) {
-      return toast.error("Enter Email");
+    if (!email || !email.trim()) {
+      return toast.error("Please enter your registered email address.");
     }
 
     try {
@@ -27,24 +28,25 @@ function ForgotPassword() {
       const { data } = await axios.post(
         "http://localhost:5000/api/auth/forgot-password",
         {
-          email,
+          email: email.trim(),
         }
       );
 
-      toast.success(data.message);
+      toast.success(data.message || "Verification code sent to your email.");
 
       navigate("/verify-otp", {
-        state: { email },
+        state: { email: email.trim() },
       });
 
     }
 
     catch (error) {
 
-      toast.error(
-        error.response?.data?.message ||
-        "Something went wrong"
+      const errorMsg = getFriendlyErrorMessage(
+        error,
+        "Unable to send reset code. Please verify your email and try again."
       );
+      toast.error(errorMsg);
 
     }
 

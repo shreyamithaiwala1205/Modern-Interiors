@@ -7,6 +7,8 @@ import {
   FaEye,
   FaEyeSlash,
 } from "react-icons/fa";
+import toast from "react-hot-toast";
+import { getFriendlyErrorMessage } from "../utils/errorHandler";
 import "../css/Register.css";
 
 function Register({ changeForm }) {
@@ -34,17 +36,17 @@ function Register({ changeForm }) {
     e.preventDefault();
 
     if (
-      !formData.name ||
-      !formData.email ||
+      !formData.name.trim() ||
+      !formData.email.trim() ||
       !formData.password ||
       !formData.confirmPassword
     ) {
-      alert("Please fill all fields.");
+      toast.error("Please fill in all required fields.");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match.");
+      toast.error("Passwords do not match. Please verify your password.");
       return;
     }
 
@@ -54,13 +56,15 @@ function Register({ changeForm }) {
       const response = await axios.post(
         "http://localhost:5000/api/auth/register",
         {
-          name: formData.name,
-          email: formData.email,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
           password: formData.password,
         }
       );
 
-      alert(response.data.message);
+      toast.success(
+        response.data.message || "Account created successfully! Please log in."
+      );
 
       setFormData({
         name: "",
@@ -69,13 +73,16 @@ function Register({ changeForm }) {
         confirmPassword: "",
       });
 
-      changeForm();
+      setTimeout(() => {
+        changeForm();
+      }, 1000);
 
     } catch (error) {
-      alert(
-        error.response?.data?.message ||
-        "Something went wrong. Please try again."
+      const errorMsg = getFriendlyErrorMessage(
+        error,
+        "Registration failed. Please check your details and try again."
       );
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

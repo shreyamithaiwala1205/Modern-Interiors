@@ -9,6 +9,7 @@ import {
   FaEyeSlash,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { getFriendlyErrorMessage } from "../utils/errorHandler";
 import "../css/Login.css";
 
 function Login({ changeForm }) {
@@ -43,8 +44,8 @@ function Login({ changeForm }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.email || !formData.password) {
-      toast.error("Please fill all fields");
+    if (!formData.email.trim() || !formData.password) {
+      toast.error("Please enter both your email and password.");
       return;
     }
 
@@ -54,7 +55,7 @@ function Login({ changeForm }) {
       const response = await axios.post(
         "http://localhost:5000/api/auth/login",
         {
-          email: formData.email,
+          email: formData.email.trim(),
           password: formData.password,
         }
       );
@@ -62,7 +63,11 @@ function Login({ changeForm }) {
       // Save JWT Token
       login(response.data.user, response.data.token);
 
-      toast.success("Login Successful 🎉");
+      const userName = response.data.user?.name
+        ? response.data.user.name.split(" ")[0]
+        : "User";
+
+      toast.success(`Welcome back, ${userName}! Login successful.`);
 
       setFormData({
         email: "",
@@ -70,21 +75,23 @@ function Login({ changeForm }) {
       });
 
       setTimeout(() => {
-            if (response.data.user.role === "admin") {
-                navigate("/admin/dashboard");
-            } else {
-                navigate("/");
-            }
-          }, 1000);
+        if (response.data.user.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
+      }, 1000);
 
-          } catch (error) {
-            toast.error(
-              error.response?.data?.message || "Login Failed"
-            );
-          } finally {
-            setLoading(false);
-          }
-        };
+    } catch (error) {
+      const errorMsg = getFriendlyErrorMessage(
+        error,
+        "Invalid email or password. Please try again."
+      );
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
     return (
     <section className="login-page">

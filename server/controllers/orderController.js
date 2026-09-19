@@ -1,5 +1,15 @@
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
+const Furniture = require("../models/Furniture");
+const { applyStockVisibility } = require("../utils/stockVisibility");
+
+const {
+  sendBrevoEmail,
+} = require("../config/brevoMailer");
+
+const {
+  orderConfirmationEmail,
+} = require("../config/emailTemplates");
 
 // ===================================
 // Place Order
@@ -47,6 +57,35 @@ const placeOrder = async (req, res) => {
       });
     }
 
+    // Products deleted, or hidden/disabled by admin, after being
+    // added to cart can't be purchased.
+    const unavailableItems = cartItems.filter(
+      (item) => !item.furniture || item.furniture.isVisible === false
+    );
+
+    if (unavailableItems.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Some items in your cart are no longer available: ${unavailableItems
+          .map((item) => item.furniture?.name || "Unknown item")
+          .join(", ")}. Please remove them and try again.`,
+      });
+    }
+
+    // Make sure requested quantities are still in stock.
+    const outOfStockItems = cartItems.filter(
+      (item) => item.furniture.stock < item.quantity
+    );
+
+    if (outOfStockItems.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient stock for: ${outOfStockItems
+          .map((item) => item.furniture.name)
+          .join(", ")}`,
+      });
+    }
+
     const totalItems = cartItems.reduce(
     (sum, item) => sum + item.quantity,
     0
@@ -60,24 +99,33 @@ const placeOrder = async (req, res) => {
 
     const deliveryCharge = subtotal > 5000 ? 0 : 499;
 
-    const totalPrice = subtotal + deliveryCharge;
+    const discount = Number(req.body.discount) || 0;
+    const coupon = String(req.body.coupon || "").trim();
 
-      const order = await Order.create({
+    const clientTotalPrice = Number(req.body.totalPrice);
+    const calculatedTotal = Math.max(subtotal + deliveryCharge - discount, 0);
+    const totalPrice = Number.isFinite(clientTotalPrice) && clientTotalPrice >= 0 ? clientTotalPrice : calculatedTotal;
 
-    user: req.user._id,
+    const order = await Order.create({
 
-    orderNumber: "ORD" + Date.now(),
+      user: req.user._id,
 
-    items: cartItems.map((item) => ({
-      furniture: item.furniture._id,
-      quantity: item.quantity,
-      price: item.furniture.priceValue,
-    })),
+      orderNumber: "ORD" + Date.now(),
 
-    totalItems,
-    subtotal,
-    deliveryCharge,
-    totalPrice,
+      items: cartItems.map((item) => ({
+        furniture: item.furniture._id,
+        name: item.furniture.name,
+        image: item.furniture.image,
+        quantity: item.quantity,
+        price: item.furniture.priceValue,
+      })),
+
+      totalItems,
+      subtotal,
+      deliveryCharge,
+      discount,
+      coupon,
+      totalPrice,
 
     shippingAddress: {
       fullName,
@@ -112,9 +160,54 @@ const placeOrder = async (req, res) => {
     });
 
 
+      // Deduct purchased quantities from stock and
+      // auto-hide any product that just sold out.
+      for (const item of cartItems) {
+
+        const product = await Furniture.findById(
+          item.furniture._id
+        );
+
+        if (!product) continue;
+
+        product.stock = Math.max(
+          product.stock - item.quantity,
+          0
+        );
+
+        applyStockVisibility(product);
+
+        await product.save();
+
+      }
+
+
       // Clear Cart after order
       await Cart.deleteMany({
         user: req.user._id,
+      });
+
+
+      // Send order confirmation email to the
+      // customer. Failures are logged inside
+      // sendBrevoEmail and never block the order.
+      const emailItems = cartItems.map((item) => ({
+        name: item.furniture.name,
+        quantity: item.quantity,
+        price: item.furniture.priceValue,
+      }));
+
+      const { subject, html } =
+        orderConfirmationEmail({
+          order,
+          items: emailItems,
+        });
+
+      sendBrevoEmail({
+        toEmail: order.shippingAddress.email,
+        toName: order.shippingAddress.fullName,
+        subject,
+        html,
       });
 
 

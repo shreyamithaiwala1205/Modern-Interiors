@@ -24,6 +24,8 @@ const consultationRoutes = require("./routes/consultationRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const statsRoutes = require("./routes/statsRoutes");
+const homeSettingsRoutes = require("./routes/homeSettingsRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const adminRoutes = require("./routes/adminRoutes");
 const adminProductRoutes = require("./routes/adminProductRoutes");
@@ -32,6 +34,11 @@ const adminCouponRoutes = require("./routes/adminCouponRoutes");
 const adminConsultationRoutes = require("./routes/adminConsultationRoutes");
 const adminContactRoutes = require("./routes/adminContactRoutes");
 const adminProjectRoutes = require("./routes/adminProjectRoutes");
+const projectCategoryRoutes = require("./routes/projectCategoryRoutes");
+const adminProjectCategoryRoutes = require("./routes/adminProjectCategoryRoutes");
+const adminHomeSettingsRoutes = require("./routes/adminHomeSettingsRoutes");
+const adminEmailSettingsRoutes = require("./routes/adminEmailSettingsRoutes");
+const adminReviewRoutes = require("./routes/adminReviewRoutes");
 
 const app = express();
 
@@ -41,7 +48,10 @@ const app = express();
 
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        // Vite falls back to the next free port (5174, 5175, ...) when
+        // 5173 is already taken, so accept any localhost dev port
+        // instead of breaking every API call when that happens.
+        origin: /^http:\/\/localhost:\d+$/,
         credentials: true,
     })
 );
@@ -155,8 +165,23 @@ app.use(
 );
 
 app.use(
+    "/api/project-categories",
+    projectCategoryRoutes
+);
+
+app.use(
     "/api/stats",
     statsRoutes
+);
+
+app.use(
+    "/api/home-settings",
+    homeSettingsRoutes
+);
+
+app.use(
+    "/api/reviews",
+    reviewRoutes
 );
 
 // =====================================================
@@ -201,6 +226,26 @@ app.use(
 app.use(
     "/api/admin/projects",
     adminProjectRoutes
+);
+
+app.use(
+    "/api/admin/project-categories",
+    adminProjectCategoryRoutes
+);
+
+app.use(
+    "/api/admin/home-settings",
+    adminHomeSettingsRoutes
+);
+
+app.use(
+    "/api/admin/email-settings",
+    adminEmailSettingsRoutes
+);
+
+app.use(
+    "/api/admin/reviews",
+    adminReviewRoutes
 );
 
 // =====================================================

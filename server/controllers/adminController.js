@@ -8,9 +8,8 @@ const Furniture = require("../models/Furniture");
 
 const getDashboard = async (req, res) => {
     try {
-        const totalUsers = await User.countDocuments({
-            role: "user",
-        });
+        const totalUsers =
+            await User.countDocuments();
 
         const totalProducts =
             await Furniture.countDocuments();
@@ -20,11 +19,26 @@ const getDashboard = async (req, res) => {
 
         const lowStockProducts =
             await Furniture.find({
-                stock: { $lte: 5 },
+                stock: { $lte: 5, $gt: 0 },
             })
                 .select("name stock image")
                 .sort({ stock: 1 })
                 .limit(5);
+
+        const outOfStockProducts =
+            await Furniture.find({
+                stock: { $lte: 0 },
+            })
+                .select(
+                    "name stock image isVisible autoHiddenDueToStock"
+                )
+                .sort({ updatedAt: -1 })
+                .limit(5);
+
+        const outOfStockCount =
+            await Furniture.countDocuments({
+                stock: { $lte: 0 },
+            });
 
         const revenue =
             await Order.aggregate([
@@ -78,6 +92,8 @@ const getDashboard = async (req, res) => {
 
                 recentOrders,
                 lowStockProducts,
+                outOfStockProducts,
+                outOfStockCount,
             },
         });
     } catch (error) {
@@ -202,10 +218,14 @@ const getAllUsers = async (
     res
 ) => {
     try {
+
+        // IMPORTANT:
+        // Fetch BOTH users and admins.
+        // Previously admins were excluded with:
+        // role: { $ne: "admin" }
+
         const users =
-            await User.find({
-                role: { $ne: "admin" },
-            })
+            await User.find({})
                 .select("-password")
                 .sort({
                     createdAt: -1,
@@ -216,7 +236,9 @@ const getAllUsers = async (
             count: users.length,
             users,
         });
+
     } catch (error) {
+
         console.error(
             "GET USERS ERROR:",
             error
@@ -252,6 +274,8 @@ const deleteUser = async (
             });
         }
 
+        // Keep existing protection:
+        // Admin cannot be deleted.
         if (user.role === "admin") {
             return res.status(400).json({
                 success: false,
@@ -260,6 +284,8 @@ const deleteUser = async (
             });
         }
 
+        // Keep existing protection:
+        // Current logged-in admin cannot delete own account.
         if (
             req.user &&
             user._id.toString() ===
@@ -415,6 +441,10 @@ const updateUser = async (
         });
     }
 };
+
+// =====================================================
+// EXPORT
+// =====================================================
 
 module.exports = {
     getDashboard,

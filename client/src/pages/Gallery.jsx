@@ -6,111 +6,89 @@ import React, {
 
 import {
     useNavigate,
+    useSearchParams,
 } from "react-router-dom";
 
 import axios from "axios";
+import { motion } from "framer-motion";
 
 import getImageUrl from "../utils/imageUrl";
+import { useProjectCategories } from "../context/ProjectCategoryContext";
+import ReviewsSection from "../components/ReviewsSection";
 
 import "../css/Gallery.css";
 
-import beforeImg
-    from "../assets/images/before.png";
-
-import afterImg
-    from "../assets/images/after.png";
+import beforeImg from "../assets/images/before.png";
+import afterImg from "../assets/images/after.png";
 
 function Gallery() {
 
-    const navigate =
-        useNavigate();
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const categoryParam = searchParams.get("category");
+    const { categories: dbCategories, normalizeCategory } = useProjectCategories();
 
     // =====================================================
     // STATES
     // =====================================================
 
-    const [projects, setProjects] =
-        useState([]);
+    const [projects, setProjects] = useState([]);
+    const [category, setCategory] = useState("All");
+    const [selectedProject, setSelectedProject] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const [category, setCategory] =
-        useState("All");
+    const [stats, setStats] = useState({
+        projects: 0,
+        users: 0,
+        orders: 0,
+        consultations: 0,
+    });
 
-    const [selectedProject, setSelectedProject] =
-        useState(null);
+    const [projectReviews, setProjectReviews] = useState([]);
 
-    const [loading, setLoading] =
-        useState(true);
-
-    const [error, setError] =
-        useState("");
-
-    const [stats, setStats] =
-        useState({
-            projects: 0,
-            users: 0,
-            orders: 0,
-            consultations: 0,
-        });
+    // Synchronize category with URL search param
+    useEffect(() => {
+        if (categoryParam) {
+            const norm = normalizeCategory(categoryParam);
+            setCategory(norm);
+        } else {
+            setCategory("All");
+        }
+    }, [categoryParam, normalizeCategory]);
 
     // =====================================================
     // FETCH PROJECTS
     // =====================================================
 
     useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                setLoading(true);
+                setError("");
 
-        const fetchProjects =
-            async () => {
+                const response = await axios.get(
+                    "http://localhost:5000/api/projects"
+                );
 
-                try {
-
-                    setLoading(true);
-
-                    setError("");
-
-                    const response =
-                        await axios.get(
-                            "http://localhost:5000/api/projects"
-                        );
-
-                    if (
-                        response.data?.success
-                    ) {
-
-                        setProjects(
-                            Array.isArray(
-                                response.data.projects
-                            )
-                                ? response.data.projects
-                                : []
-                        );
-
-                    } else {
-
-                        setProjects([]);
-
-                    }
-
-                } catch (fetchError) {
-
-                    console.error(
-                        "FETCH PROJECTS ERROR:",
-                        fetchError
+                if (response.data?.success) {
+                    setProjects(
+                        Array.isArray(response.data.projects)
+                            ? response.data.projects
+                            : []
                     );
-
-                    setError(
-                        "Unable to load projects."
-                    );
-
-                } finally {
-
-                    setLoading(false);
-
+                } else {
+                    setProjects([]);
                 }
-
-            };
+            } catch (fetchError) {
+                console.error("FETCH PROJECTS ERROR:", fetchError);
+                setError("Unable to load projects.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
         fetchProjects();
-
     }, []);
 
     // =====================================================
@@ -118,92 +96,73 @@ function Gallery() {
     // =====================================================
 
     useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await axios.get(
+                    "http://localhost:5000/api/stats"
+                );
 
-        const fetchStats =
-            async () => {
-
-                try {
-
-                    const response =
-                        await axios.get(
-                            "http://localhost:5000/api/stats"
-                        );
-
-                    if (
-                        response.data?.success
-                    ) {
-
-                        setStats(
-                            response.data.stats
-                        );
-
-                    }
-
-                } catch (statsError) {
-
-                    console.error(
-                        "FETCH STATS ERROR:",
-                        statsError
-                    );
-
+                if (response.data?.success) {
+                    setStats(response.data.stats);
                 }
-
-            };
+            } catch (statsError) {
+                console.error("FETCH STATS ERROR:", statsError);
+            }
+        };
 
         fetchStats();
-
     }, []);
 
     // =====================================================
-    // CATEGORIES
+    // FETCH CLIENT REVIEWS (PROJECT-WISE)
     // =====================================================
 
-    const categories =
-        useMemo(() => {
+    useEffect(() => {
+        const fetchProjectReviews = async () => {
+            try {
+                const response = await axios.get(
+                    "http://localhost:5000/api/reviews/featured?targetType=Project&limit=6"
+                );
 
-            const uniqueCategories = [
-                ...new Set(
-                    projects
-                        .map(
-                            (item) =>
-                                item.category
-                        )
-                        .filter(Boolean)
-                ),
-            ];
+                if (response.data?.success) {
+                    setProjectReviews(response.data.reviews || []);
+                }
+            } catch (reviewsError) {
+                console.error("FETCH PROJECT REVIEWS ERROR:", reviewsError);
+            }
+        };
 
-            return [
-                "All",
-                ...uniqueCategories,
-            ];
+        fetchProjectReviews();
+    }, []);
 
-        }, [projects]);
+    // =====================================================
+    // CATEGORIES (STANDARDIZED PROJECT CATEGORIES)
+    // =====================================================
+
+    const categories = useMemo(() => {
+        return [
+            { value: "All", label: "All Projects" },
+            ...dbCategories.map((c) => ({
+                value: c.name,
+                label: c.label || c.name,
+            })),
+        ];
+    }, [dbCategories]);
 
     // =====================================================
     // FILTER PROJECTS
     // =====================================================
 
-    const filteredProjects =
-        useMemo(() => {
+    const filteredProjects = useMemo(() => {
+        if (category === "All") {
+            return projects;
+        }
 
-            if (
-                category === "All"
-            ) {
-
-                return projects;
-
-            }
-
-            return projects.filter(
-                (item) =>
-                    item.category ===
-                    category
-            );
-
-        }, [
-            projects,
-            category,
-        ]);
+        return projects.filter((item) => {
+            const itemNorm = normalizeCategory(item.category);
+            return itemNorm.toLowerCase() === category.toLowerCase();
+        });
+    }, [projects, category, normalizeCategory]);
 
     // =====================================================
     // VIEW PROJECT
@@ -231,6 +190,20 @@ function Gallery() {
 
         };
 
+    // =====================================================
+    // SCROLL REVEAL ANIMATION
+    // =====================================================
+
+    const reveal = (index = 0) => ({
+        initial: { opacity: 0, y: 40 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, amount: 0.2 },
+        transition: {
+            duration: 0.6,
+            delay: Math.min(index * 0.08, 0.4),
+        },
+    });
+
     return (
 
         <section className="gallery">
@@ -239,7 +212,12 @@ function Gallery() {
                 HERO
             ================================================= */}
 
-            <div className="gallery-heading">
+            <motion.div
+                className="gallery-heading"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7 }}
+            >
 
                 <h4>
                     OUR PROJECTS
@@ -261,112 +239,179 @@ function Gallery() {
                     and perfection.
                 </p>
 
-            </div>
+            </motion.div>
 
             {/* =================================================
                 FILTER
             ================================================= */}
 
             <div className="gallery-filter">
-
-                {categories.map(
-                    (cat) => (
-
-                        <button
-                            type="button"
-                            key={cat}
-                            className={
-                                category ===
-                                cat
-                                    ? "active"
-                                    : ""
+                {categories.map((cat) => (
+                    <button
+                        type="button"
+                        key={cat.value}
+                        className={category === cat.value ? "active" : ""}
+                        onClick={() => {
+                            setCategory(cat.value);
+                            if (cat.value === "All") {
+                                setSearchParams({});
+                            } else {
+                                setSearchParams({ category: cat.value });
                             }
-                            onClick={() =>
-                                setCategory(
-                                    cat
-                                )
-                            }
-                        >
-                            {cat}
-                        </button>
-
-                    )
-                )}
-
+                        }}
+                    >
+                        {cat.label || cat.value}
+                    </button>
+                ))}
             </div>
 
             {/* =================================================
                 GALLERY
             ================================================= */}
 
-            <div className="gallery-grid">
+            {loading ? (
 
-                {loading ? (
+                <div className="gallery-status">
+                    <h2>
+                        Loading Projects...
+                    </h2>
+                </div>
 
-                    <div
-                        className="gallery-loading"
-                        style={{
-                            gridColumn:
-                                "1 / -1",
-                        }}
-                    >
+            ) : error ? (
 
-                        <h2>
-                            Loading Projects...
-                        </h2>
+                <div className="gallery-status">
+                    <h2>
+                        {error}
+                    </h2>
+                </div>
 
-                    </div>
+            ) : filteredProjects.length === 0 ? (
 
-                ) : error ? (
+                <div className="gallery-status">
+                    <h2>
+                        No Projects Found
+                    </h2>
 
-                    <div
-                        className="gallery-empty"
-                        style={{
-                            gridColumn:
-                                "1 / -1",
-                        }}
-                    >
+                    <p>
+                        New projects will
+                        appear here once
+                        added from the
+                        admin panel.
+                    </p>
+                </div>
 
-                        <h2>
-                            {error}
-                        </h2>
+            ) : filteredProjects.length <= 2 ? (
 
-                    </div>
+                /* =========================================
+                    SPOTLIGHT LAYOUT (1-2 RESULTS)
+                    A wide editorial feature instead of a
+                    grid card floating alone in empty space.
+                ========================================= */
 
-                ) : filteredProjects.length ===
-                  0 ? (
+                <div className="gallery-spotlight">
 
-                    <div
-                        className="gallery-empty"
-                        style={{
-                            gridColumn:
-                                "1 / -1",
-                        }}
-                    >
+                    {filteredProjects.map(
+                        (item, index) => (
 
-                        <h2>
-                            No Projects Found
-                        </h2>
+                            <motion.div
+                                className="spotlight-card"
+                                key={item._id}
+                                {...reveal(index)}
+                            >
 
-                        <p>
-                            New projects
-                            will appear here
-                            once added from
-                            the admin panel.
-                        </p>
+                                <div className="spotlight-image">
 
-                    </div>
+                                    <img
+                                        src={getImageUrl(
+                                            item.image
+                                        )}
+                                        alt={
+                                            item.title ||
+                                            "Interior Project"
+                                        }
+                                        onError={(
+                                            event
+                                        ) => {
+                                            event.currentTarget.style.display =
+                                                "none";
+                                        }}
+                                    />
 
-                ) : (
+                                </div>
 
-                    filteredProjects.map(
-                        (item) => (
+                                <div className="spotlight-content">
 
-                            <div
+                                    <span className="spotlight-category">
+                                        {
+                                            item.category ||
+                                            "Interior Project"
+                                        }
+                                    </span>
+
+                                    <h3>
+                                        {item.title}
+                                    </h3>
+
+                                    <p className="spotlight-description">
+                                        {item.description ||
+                                            "A thoughtfully designed space crafted by our team, blending function and elegance."}
+                                    </p>
+
+                                    <div className="spotlight-meta">
+
+                                        <div>
+                                            <strong>
+                                                Location
+                                            </strong>
+                                            <span>
+                                                {item.location ||
+                                                    "-"}
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <strong>
+                                                Year
+                                            </strong>
+                                            <span>
+                                                {item.year ||
+                                                    "-"}
+                                            </span>
+                                        </div>
+
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            openProject(item)
+                                        }
+                                    >
+                                        View Full Project
+                                    </button>
+
+                                </div>
+
+                            </motion.div>
+
+                        )
+                    )}
+
+                </div>
+
+            ) : (
+
+                <div className="gallery-grid">
+
+                    {filteredProjects.map(
+                        (item, index) => (
+
+                            <motion.div
                                 className="gallery-card"
                                 key={
                                     item._id
                                 }
+                                {...reveal(index)}
                             >
 
                                 <img
@@ -417,14 +462,14 @@ function Gallery() {
 
                                 </div>
 
-                            </div>
+                            </motion.div>
 
                         )
-                    )
+                    )}
 
-                )}
+                </div>
 
-            </div>
+            )}
 
             {/* =================================================
                 BEFORE & AFTER
@@ -432,7 +477,10 @@ function Gallery() {
 
             <div className="before-after">
 
-                <div className="before-card">
+                <motion.div
+                    className="before-card"
+                    {...reveal(0)}
+                >
 
                     <img
                         src={beforeImg}
@@ -443,9 +491,12 @@ function Gallery() {
                         Before
                     </span>
 
-                </div>
+                </motion.div>
 
-                <div className="before-card">
+                <motion.div
+                    className="before-card"
+                    {...reveal(1)}
+                >
 
                     <img
                         src={afterImg}
@@ -456,7 +507,7 @@ function Gallery() {
                         After
                     </span>
 
-                </div>
+                </motion.div>
 
             </div>
 
@@ -466,7 +517,7 @@ function Gallery() {
 
             <div className="gallery-stats">
 
-                <div className="stat">
+                <motion.div className="stat" {...reveal(0)}>
 
                     <h2>
                         {stats.projects}+
@@ -476,9 +527,9 @@ function Gallery() {
                         Projects Completed
                     </p>
 
-                </div>
+                </motion.div>
 
-                <div className="stat">
+                <motion.div className="stat" {...reveal(1)}>
 
                     <h2>
                         {stats.users}+
@@ -488,9 +539,9 @@ function Gallery() {
                         Registered Clients
                     </p>
 
-                </div>
+                </motion.div>
 
-                <div className="stat">
+                <motion.div className="stat" {...reveal(2)}>
 
                     <h2>
                         {stats.orders}+
@@ -500,9 +551,9 @@ function Gallery() {
                         Orders Placed
                     </p>
 
-                </div>
+                </motion.div>
 
-                <div className="stat">
+                <motion.div className="stat" {...reveal(3)}>
 
                     <h2>
                         {stats.consultations}+
@@ -512,7 +563,7 @@ function Gallery() {
                         Consultations
                     </p>
 
-                </div>
+                </motion.div>
 
             </div>
 
@@ -520,91 +571,55 @@ function Gallery() {
                 TESTIMONIALS
             ================================================= */}
 
-            <div className="gallery-testimonials">
+            {projectReviews.length > 0 && (
 
-                <h4>
-                    CLIENT TESTIMONIALS
-                </h4>
+                <div className="gallery-testimonials">
 
-                <h2>
-                    What Our Clients Say
-                </h2>
+                    <h4>
+                        CLIENT TESTIMONIALS
+                    </h4>
 
-                <div className="testimonial-container">
+                    <h2>
+                        What Our Clients Say
+                    </h2>
 
-                    <div className="testimonial-card">
+                    <div className="testimonial-container">
 
-                        <p>
-                            "Modern Interiors
-                            completely transformed
-                            our living room.
-                            The design exceeded
-                            our expectations.
-                            Every detail was
-                            handled professionally."
-                        </p>
+                        {projectReviews.map((review, index) => (
 
-                        <h3>
-                            Riya Shah
-                        </h3>
+                            <motion.div
+                                className="testimonial-card"
+                                key={review._id}
+                                {...reveal(index)}
+                            >
 
-                        <span>
-                            Home Owner
-                        </span>
+                                <p>
+                                    "{review.comment}"
+                                </p>
 
-                    </div>
+                                <h3>
+                                    {review.user?.name || "Happy Client"}
+                                </h3>
 
-                    <div className="testimonial-card">
+                                <span>
+                                    {review.target?.title || "Client"}
+                                </span>
 
-                        <p>
-                            "Amazing experience
-                            from planning to
-                            execution.
-                            Professional team
-                            with modern ideas
-                            and timely delivery."
-                        </p>
+                            </motion.div>
 
-                        <h3>
-                            Rahul Patel
-                        </h3>
-
-                        <span>
-                            Business Owner
-                        </span>
-
-                    </div>
-
-                    <div className="testimonial-card">
-
-                        <p>
-                            "Excellent quality,
-                            premium materials
-                            and beautiful
-                            finishing.
-                            Highly recommended
-                            for luxury interiors."
-                        </p>
-
-                        <h3>
-                            Priya Mehta
-                        </h3>
-
-                        <span>
-                            Villa Owner
-                        </span>
+                        ))}
 
                     </div>
 
                 </div>
 
-            </div>
+            )}
 
             {/* =================================================
                 CTA
             ================================================= */}
 
-            <div className="gallery-cta">
+            <motion.div className="gallery-cta" {...reveal(0)}>
 
                 <h2>
                     Ready To Transform
@@ -631,7 +646,7 @@ function Gallery() {
                     Book Consultation
                 </button>
 
-            </div>
+            </motion.div>
 
             {/* =================================================
                 PROJECT DETAILS MODAL
@@ -732,6 +747,11 @@ function Gallery() {
                                 }
 
                             </p>
+
+                            <ReviewsSection
+                                targetType="Project"
+                                targetId={selectedProject._id}
+                            />
 
                         </div>
 

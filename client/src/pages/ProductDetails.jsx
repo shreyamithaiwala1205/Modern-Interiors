@@ -11,6 +11,7 @@ import {
 import axios from "axios";
 
 import getImageUrl from "../utils/imageUrl";
+import ReviewsSection from "../components/ReviewsSection";
 
 import {
   useWishlist,
@@ -19,6 +20,14 @@ import {
 import {
   useCart,
 } from "../context/CartContext";
+
+import {
+  FaShoppingCart,
+  FaEye,
+  FaHeart,
+  FaRegHeart,
+  FaBolt,
+} from "react-icons/fa";
 
 import "../css/ProductDetails.css";
 
@@ -178,11 +187,13 @@ function ProductDetails() {
     return (
 
       <div className="product-page">
+        <div className="product-page-inner">
 
-        <h2>
-          Loading Product...
-        </h2>
+          <h2>
+            Loading Product...
+          </h2>
 
+        </div>
       </div>
 
     );
@@ -194,10 +205,63 @@ function ProductDetails() {
     return (
 
       <div className="product-page">
+        <div className="product-page-inner">
 
-        <h2>
-          {error}
-        </h2>
+          <h2>
+            {error}
+          </h2>
+
+          <button
+            className="back-btn"
+            onClick={() =>
+              navigate(
+                "/furniture"
+              )
+            }
+          >
+            ← Back
+          </button>
+
+        </div>
+      </div>
+
+    );
+
+  }
+
+  const specs = [
+    { label: "Category", value: product.category },
+    { label: "Material", value: product.material },
+    { label: "Dimensions", value: product.dimensions },
+    { label: "Warranty", value: product.warranty },
+    { label: "Delivery", value: product.delivery },
+  ].filter((spec) => spec.value);
+
+  return (
+
+    <div className="product-page">
+
+      <div className="product-page-inner">
+
+        {/* BREADCRUMB */}
+
+        <div className="product-breadcrumb">
+
+          <span onClick={() => navigate("/")}>
+            Home
+          </span>
+          <span className="crumb-sep">/</span>
+          <span onClick={() => navigate("/furniture")}>
+            Furniture
+          </span>
+          <span className="crumb-sep">/</span>
+          <span className="crumb-current">
+            {product.name}
+          </span>
+
+        </div>
+
+        {/* BACK BUTTON */}
 
         <button
           className="back-btn"
@@ -207,249 +271,218 @@ function ProductDetails() {
             )
           }
         >
-          ← Back
+          ← Back To Furniture
         </button>
 
-      </div>
+        <div className="product-container">
 
-    );
+          {/* LEFT */}
 
-  }
+          <div className="image-section">
 
-  return (
-
-    <div className="product-page">
-
-      {/* BACK BUTTON */}
-
-      <button
-        className="back-btn"
-        onClick={() =>
-          navigate(
-            "/furniture"
-          )
-        }
-      >
-        ← Back To Furniture
-      </button>
-
-      <div className="product-container">
-
-        {/* LEFT */}
-
-        <div className="image-section">
-
-          <img
-            src={getImageUrl(
-              product.image
-            )}
-            alt={
-              product.name
-            }
-            className="main-image"
-          />
-
-        </div>
-
-        {/* RIGHT */}
-
-        <div className="details-section">
-
-          <h1>
-            {product.name}
-          </h1>
-
-          <h2 className="price">
-
-            ₹
-            {Number(
-              product.priceValue ||
-              0
-            ).toLocaleString()}
-
-          </h2>
-
-          <div className="rating">
-
-            {"★".repeat(
-              Math.floor(
-                product.rating
-              )
-            )}
-
-            {"☆".repeat(
-              Math.max(
-                0,
-                5 -
-                  Math.floor(
-                    product.rating
-                  )
-              )
-            )}
-
-            <span>
-              ({product.rating})
-            </span>
+            <img
+              src={getImageUrl(
+                product.image
+              )}
+              alt={
+                product.name
+              }
+              className="main-image"
+            />
 
           </div>
 
-          <div className="stock">
+          {/* RIGHT */}
 
-            {product.stock ? (
+          <div className="details-section">
 
-              <span className="in-stock">
-                ✅ In Stock
+            <div className="details-meta-row">
+
+              <span className="details-category-chip">
+                {product.category}
               </span>
 
-            ) : (
+              {product.stock ? (
 
-              <span className="out-stock">
-                ❌ Out Of Stock
-              </span>
+                <span className="stock-pill in-stock">
+                  ✓ In Stock
+                </span>
 
-            )}
+              ) : (
 
-          </div>
+                <span className="stock-pill out-stock">
+                  ✕ Out Of Stock
+                </span>
 
-          <p className="description">
-            {product.description}
-          </p>
+              )}
 
-          <div className="info-box">
+            </div>
 
-            <h3>
-              Category
-            </h3>
+            <h1>
+              {product.name}
+            </h1>
 
-            <p>
-              {product.category}
-            </p>
+            <div className="rating">
 
-          </div>
-
-          <div className="info-box">
-
-            <h3>
-              Material
-            </h3>
-
-            <p>
-              {product.material}
-            </p>
-
-          </div>
-
-          <div className="info-box">
-
-            <h3>
-              Dimensions
-            </h3>
-
-            <p>
-              {product.dimensions}
-            </p>
-
-          </div>
-
-          <div className="info-box">
-
-            <h3>
-              Warranty
-            </h3>
-
-            <p>
-              {product.warranty}
-            </p>
-
-          </div>
-
-          <div className="info-box">
-
-            <h3>
-              Delivery
-            </h3>
-
-            <p>
-              {product.delivery}
-            </p>
-
-          </div>
-
-          <div className="features">
-
-            <h3>
-              Features
-            </h3>
-
-            <ul>
-
-              {product.features?.map(
-                (
-                  feature,
-                  index
-                ) => (
-
-                  <li
-                    key={index}
-                  >
-                    ✔ {feature}
-                  </li>
-
+              {"★".repeat(
+                Math.floor(
+                  product.rating
                 )
               )}
 
-            </ul>
-
-          </div>
-
-          {/* BUTTONS */}
-
-          <div className="button-group">
-
-            <button
-              className="cart-btn"
-              onClick={() =>
-                addToCart(
-                  product
+              {"☆".repeat(
+                Math.max(
+                  0,
+                  5 -
+                    Math.floor(
+                      product.rating
+                    )
                 )
-              }
-            >
-              🛒 Add To Cart
-            </button>
+              )}
 
-            <button
-              className="wishlist-btn"
-              onClick={() =>
-                toggleWishlist(
-                  product
+              <span>
+                ({product.rating})
+              </span>
+
+            </div>
+
+            <h2 className="price">
+
+              ₹
+              {Number(
+                product.priceValue ||
+                0
+              ).toLocaleString()}
+
+            </h2>
+
+            <p className="description">
+              {product.description}
+            </p>
+
+            {specs.length > 0 && (
+
+              <div className="specs-grid">
+
+                {specs.map((spec) => (
+
+                  <div
+                    className="spec-card"
+                    key={spec.label}
+                  >
+                    <span className="spec-label">
+                      {spec.label}
+                    </span>
+                    <span className="spec-value">
+                      {spec.value}
+                    </span>
+                  </div>
+
+                ))}
+
+              </div>
+
+            )}
+
+            {product.features?.length > 0 && (
+
+              <div className="features">
+
+                <h3>
+                  Features
+                </h3>
+
+                <div className="feature-chip-group">
+
+                  {product.features.map(
+                    (
+                      feature,
+                      index
+                    ) => (
+
+                      <span
+                        className="feature-chip"
+                        key={index}
+                      >
+                        ✓ {feature}
+                      </span>
+
+                    )
+                  )}
+
+                </div>
+
+              </div>
+
+            )}
+
+            {/* BUTTONS */}
+
+            <div className="button-group">
+
+              <button
+                className="cart-btn"
+                onClick={() =>
+                  addToCart(
+                    product
+                  )
+                }
+                disabled={Number(product.stock || 0) <= 0}
+              >
+                <FaShoppingCart className="btn-icon" />
+                <span>
+                  {Number(product.stock || 0) <= 0
+                    ? "Out of Stock"
+                    : "Add To Cart"}
+                </span>
+              </button>
+
+              <button
+                className="wishlist-btn"
+                onClick={() =>
+                  toggleWishlist(
+                    product
+                  )
+                }
+              >
+
+                {isWishlisted(
+                  product._id
                 )
-              }
-            >
+                  ? (
+                    <>
+                      <FaHeart className="btn-icon" style={{ color: "#ff4d6d" }} />
+                      <span>Wishlisted</span>
+                    </>
+                  )
+                  : (
+                    <>
+                      <FaRegHeart className="btn-icon" />
+                      <span>Wishlist</span>
+                    </>
+                  )}
 
-              {isWishlisted(
-                product._id
-              )
-                ? "❤️ Wishlisted"
-                : "♡ Wishlist"}
+              </button>
 
-            </button>
+              <button
+                className="buy-btn"
+                onClick={async () => {
+                  if (product) {
+                    await addToCart(product);
+                    navigate("/checkout");
+                  }
+                }}
+                disabled={Number(product.stock || 0) <= 0}
+              >
+                <FaBolt className="btn-icon" />
+                <span>Buy Now</span>
+              </button>
 
-            <button
-              className="buy-btn"
-              onClick={() =>
-                alert(
-                  "Proceeding To Checkout..."
-                )
-              }
-            >
-              Buy Now
-            </button>
+            </div>
 
           </div>
 
         </div>
-
-      </div>
 
       {/* RECENTLY VIEWED */}
 
@@ -496,14 +529,16 @@ function ProductDetails() {
                   </p>
 
                   <button
-                    className="view-btn"
+                    type="button"
+                    className="furniture-view-btn"
                     onClick={() =>
                       navigate(
                         `/product/${item._id}`
                       )
                     }
                   >
-                    View Details
+                    <span>View Details</span>
+                    <FaEye />
                   </button>
 
                 </div>
@@ -562,14 +597,16 @@ function ProductDetails() {
                   </p>
 
                   <button
-                    className="view-btn"
+                    type="button"
+                    className="furniture-view-btn"
                     onClick={() =>
                       navigate(
                         `/product/${item._id}`
                       )
                     }
                   >
-                    View Details
+                    <span>View Details</span>
+                    <FaEye />
                   </button>
 
                 </div>
@@ -582,6 +619,10 @@ function ProductDetails() {
         </div>
 
       )}
+
+      <ReviewsSection targetType="Furniture" targetId={id} />
+
+      </div>
 
     </div>
 

@@ -1,5 +1,14 @@
 const Order = require("../models/Order");
 
+const {
+    sendBrevoEmail,
+} = require("../config/brevoMailer");
+
+const {
+    orderStatusUpdateEmail,
+    adminOrderConfirmedEmail,
+} = require("../config/emailTemplates");
+
 // =====================================================
 // GET ALL ORDERS
 // =====================================================
@@ -135,6 +144,47 @@ const updateOrderStatus = async (
                     "items.furniture",
                     "name image price priceValue category"
                 );
+
+        // Notify the customer of the new status.
+        // Failures are logged inside sendBrevoEmail
+        // and never block the status update.
+        const { subject, html } =
+            orderStatusUpdateEmail({
+                order: updatedOrder,
+            });
+
+        sendBrevoEmail({
+            toEmail:
+                updatedOrder.shippingAddress.email,
+            toName:
+                updatedOrder.shippingAddress
+                    .fullName,
+            subject,
+            html,
+        });
+
+        // Also notify the admin inbox specifically
+        // when an order moves to Confirmed.
+        if (
+            status === "Confirmed" &&
+            process.env.ADMIN_NOTIFICATION_EMAIL
+        ) {
+
+            const adminEmail =
+                adminOrderConfirmedEmail({
+                    order: updatedOrder,
+                });
+
+            sendBrevoEmail({
+                toEmail:
+                    process.env
+                        .ADMIN_NOTIFICATION_EMAIL,
+                toName: "Modern Interiors Admin",
+                subject: adminEmail.subject,
+                html: adminEmail.html,
+            });
+
+        }
 
         return res.status(200).json({
             success: true,

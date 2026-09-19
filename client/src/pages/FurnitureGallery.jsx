@@ -5,6 +5,7 @@ import React, {
 } from "react";
 
 import axios from "axios";
+import { motion } from "framer-motion";
 
 import { useNavigate } from "react-router-dom";
 
@@ -13,18 +14,25 @@ import {
   FaRegHeart,
   FaSearch,
   FaEye,
+  FaShoppingBag,
+  FaPlus,
+  FaMinus,
+  FaSlidersH,
 } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 import getImageUrl from "../utils/imageUrl";
 
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 import "../css/Furniture.css";
 
 function FurnitureGallery() {
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const {
     toggleWishlist,
@@ -33,6 +41,9 @@ function FurnitureGallery() {
 
   const {
     addToCart,
+    increaseQuantity,
+    decreaseQuantity,
+    getItemQuantity,
   } = useCart();
 
   const [furnitureData, setFurnitureData] =
@@ -439,7 +450,8 @@ function FurnitureGallery() {
           <aside className="sidebar">
 
             <h2 className="title">
-              Filters
+              <FaSlidersH />
+              <span>Filters</span>
             </h2>
 
             {/* CATEGORY */}
@@ -450,30 +462,35 @@ function FurnitureGallery() {
                 Category
               </h4>
 
-              {categories.map((category) => (
+              <div className="filter-chip-group">
 
-                <label key={category}>
+                {categories.map((category) => (
 
-                  <input
-                    type="checkbox"
-                    checked={
-                      filters.category.includes(
-                        category
-                      )
+                  <button
+                    type="button"
+                    key={category}
+                    className={
+                      `filter-chip ${
+                        filters.category.includes(
+                          category
+                        )
+                          ? "active"
+                          : ""
+                      }`
                     }
-                    onChange={() =>
+                    onClick={() =>
                       toggleFilter(
                         "category",
                         category
                       )
                     }
-                  />
+                  >
+                    {category}
+                  </button>
 
-                  {category}
+                ))}
 
-                </label>
-
-              ))}
+              </div>
 
             </div>
 
@@ -485,30 +502,35 @@ function FurnitureGallery() {
                 Material
               </h4>
 
-              {materials.map((material) => (
+              <div className="filter-chip-group">
 
-                <label key={material}>
+                {materials.map((material) => (
 
-                  <input
-                    type="checkbox"
-                    checked={
-                      filters.material.includes(
-                        material
-                      )
+                  <button
+                    type="button"
+                    key={material}
+                    className={
+                      `filter-chip ${
+                        filters.material.includes(
+                          material
+                        )
+                          ? "active"
+                          : ""
+                      }`
                     }
-                    onChange={() =>
+                    onClick={() =>
                       toggleFilter(
                         "material",
                         material
                       )
                     }
-                  />
+                  >
+                    {material}
+                  </button>
 
-                  {material}
+                ))}
 
-                </label>
-
-              ))}
+              </div>
 
             </div>
 
@@ -580,6 +602,11 @@ function FurnitureGallery() {
                 min="0"
                 max="50000"
                 value={maxPrice}
+                style={{
+                  "--range-progress": `${
+                    (maxPrice / 50000) * 100
+                  }%`,
+                }}
                 onChange={(e) => {
 
                   setCurrentPage(1);
@@ -821,52 +848,129 @@ function FurnitureGallery() {
               ) : (
 
                 currentProducts.map(
-                  (item) => (
+                  (item, index) => (
 
-                    <div
+                    <motion.div
                       className="card"
                       key={item._id}
+                      initial={{
+                        opacity: 0,
+                        y: 30,
+                      }}
+                      whileInView={{
+                        opacity: 1,
+                        y: 0,
+                      }}
+                      viewport={{
+                        once: true,
+                        amount: 0.2,
+                      }}
+                      transition={{
+                        duration: 0.5,
+                        delay: Math.min(
+                          (index % 6) * 0.06,
+                          0.3
+                        ),
+                      }}
                     >
 
                       {/* IMAGE */}
 
                       <div className="img-box">
 
-                        <span className="badge">
+                        {Array.isArray(
+                          item.tags
+                        ) &&
+                          item.tags.length >
+                            0 && (
 
-                          {Number(
-                            item.rating || 0
-                          ) >= 4.7
-                            ? "BEST SELLER"
-                            : Number(
-                                item.rating || 0
-                              ) >= 4.3
-                            ? "POPULAR"
-                            : "NEW"}
+                          <div className="badge-group">
 
-                        </span>
+                            {item.tags.map(
+                              (tag) => (
 
-                        <button
-                          type="button"
-                          className="wishlist"
-                          onClick={() =>
-                            toggleWishlist(
-                              item
-                            )
-                          }
-                        >
+                                <span
+                                  className="badge"
+                                  key={tag}
+                                >
+                                  {tag}
+                                </span>
 
-                          {isWishlisted(
-                            item._id
-                          )
-                            ? (
-                              <FaHeart />
-                            )
-                            : (
-                              <FaRegHeart />
+                              )
                             )}
 
-                        </button>
+                          </div>
+
+                        )}
+
+                        <div className="img-actions">
+
+                          <button
+                            type="button"
+                            className={
+                              `wishlist ${
+                                isWishlisted(
+                                  item._id
+                                )
+                                  ? "active"
+                                  : ""
+                              }`
+                            }
+                            onClick={() =>
+                              toggleWishlist(
+                                item
+                              )
+                            }
+                            title={
+                              isWishlisted(
+                                item._id
+                              )
+                                ? "Remove from Wishlist"
+                                : "Add to Wishlist"
+                            }
+                          >
+
+                            {isWishlisted(
+                              item._id
+                            )
+                              ? (
+                                <FaHeart />
+                              )
+                              : (
+                                <FaRegHeart />
+                              )}
+
+                          </button>
+
+                          <button
+                            type="button"
+                            className="quick-view"
+                            title="View Details"
+                            onClick={() =>
+                              navigate(
+                                `/product/${item._id}`
+                              )
+                            }
+                          >
+                            <FaEye />
+                          </button>
+
+                        </div>
+
+                        {Number(
+                          item.stock || 0
+                        ) <= 5 &&
+                          Number(
+                            item.stock || 0
+                          ) > 0 && (
+
+                          <span className="stock-badge">
+                            Only{" "}
+                            {item.stock}{" "}
+                            left
+                          </span>
+
+                        )}
 
                         <img
                           src={getImageUrl(
@@ -874,6 +978,11 @@ function FurnitureGallery() {
                           )}
                           alt={item.name}
                           loading="lazy"
+                          onClick={() =>
+                            navigate(
+                              `/product/${item._id}`
+                            )
+                          }
                           onError={(e) => {
                             e.currentTarget.style.opacity =
                               "0.3";
@@ -886,57 +995,124 @@ function FurnitureGallery() {
 
                       <div className="content">
 
-                        <h3>
-                          {item.name}
-                        </h3>
+                        <div className="content-meta">
 
-                        <p className="price">
-                          ₹
-                          {Number(
-                            item.priceValue ||
-                            0
-                          ).toLocaleString()}
-                        </p>
+                          <span className="category-chip">
+                            {item.category}
+                          </span>
 
-                        {/* FIXED VIEW DETAILS */}
+                          <span className="rating-chip">
+                            ★{" "}
+                            {Number(
+                              item.rating ||
+                              0
+                            ).toFixed(1)}
+                          </span>
 
-                        <button
-                          type="button"
-                          className="furniture-view-btn"
+                        </div>
+
+                        <h3
                           onClick={() =>
                             navigate(
                               `/product/${item._id}`
                             )
                           }
                         >
+                          {item.name}
+                        </h3>
 
-                          <span>
-                            View Details
-                          </span>
+                        <div className="price-row">
 
-                          <FaEye />
+                          <p className="price">
+                            ₹
+                            {Number(
+                              item.priceValue ||
+                              0
+                            ).toLocaleString()}
+                          </p>
 
-                        </button>
+                          {!user ? (
 
-                        {/* CART */}
+                            <button
+                              type="button"
+                              className="add-cart-chip"
+                              onClick={() =>
+                                toast.error(
+                                  "You need to be logged in to add items to the cart."
+                                )
+                              }
+                            >
+                              <FaShoppingBag />
+                              <span>Add</span>
+                            </button>
 
-                        <button
-                          type="button"
-                          className="cart-btn"
-                          onClick={() =>
-                            addToCart(
-                              item
-                            )
-                          }
-                        >
+                          ) : getItemQuantity(item._id) > 0 ? (
 
-                          Add To Cart
+                            <div className="cart-chip-stepper">
 
-                        </button>
+                              <button
+                                type="button"
+                                onClick={() => decreaseQuantity(item)}
+                                title={
+                                  getItemQuantity(item._id) === 1
+                                    ? "Remove from cart"
+                                    : "Decrease quantity"
+                                }
+                              >
+                                <FaMinus />
+                              </button>
+
+                              <span>
+                                {getItemQuantity(item._id)}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => increaseQuantity(item)}
+                                title={
+                                  getItemQuantity(item._id) >=
+                                  Number(item.stock || 0)
+                                    ? "No more stock available"
+                                    : "Increase quantity"
+                                }
+                                disabled={
+                                  getItemQuantity(item._id) >=
+                                  Number(item.stock || 0)
+                                }
+                              >
+                                <FaPlus />
+                              </button>
+
+                            </div>
+
+                          ) : Number(item.stock || 0) <= 0 ? (
+
+                            <button
+                              type="button"
+                              className="add-cart-chip"
+                              disabled
+                            >
+                              <span>Out of Stock</span>
+                            </button>
+
+                          ) : (
+
+                            <button
+                              type="button"
+                              className="add-cart-chip"
+                              onClick={() => addToCart(item)}
+                            >
+                              <FaShoppingBag />
+                              <span>Add</span>
+                            </button>
+
+                          )}
+
+                        </div>
 
                       </div>
 
-                    </div>
+                    </motion.div>
 
                   )
                 )

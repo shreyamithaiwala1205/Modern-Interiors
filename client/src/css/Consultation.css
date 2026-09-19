@@ -24,90 +24,142 @@
 
 .consultation-card{
   width:100%;
-  max-width:650px;
+  max-width:680px;
   background:#1b1b1b;
-  border:1px solid #2f2f2f;
+  border:1px solid rgba(212,175,55,.25);
   border-radius:18px;
   padding:45px;
-  box-shadow:0 15px 35px rgba(0,0,0,.35);
+  box-shadow:0 18px 45px rgba(0,0,0,.45);
 }
 
 .consultation-card h2{
   color:#D4AF37;
-  font-size:38px;
+  font-size:36px;
   margin-bottom:10px;
   font-weight:700;
+  letter-spacing:0.5px;
 }
 
 .consultation-card p{
   color:#bdbdbd;
-  margin-bottom:30px;
-  font-size:16px;
+  margin-bottom:28px;
+  font-size:15.5px;
   line-height:1.6;
 }
 
 .consultation-card form{
   display:flex;
   flex-direction:column;
-  gap:18px;
+  gap:20px;
 }
 
 /* ==========================
-   INPUTS
+   FORM GROUP & INPUTS
 ========================== */
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+}
+
+.input-wrapper{
+  position:relative;
+  width:100%;
+}
 
 .consultation-card input,
 .consultation-card select,
 .consultation-card textarea{
-
   width:100%;
-  padding:15px 18px;
+  padding:14px 18px;
   border-radius:10px;
-  border:1px solid #333;
+  border:1.5px solid #333;
   background:#262626;
   color:#fff;
-  font-size:15px;
+  font-size:14.5px;
   outline:none;
-  transition:.3s;
-
+  transition:all .25s ease;
 }
 
 .consultation-card input:focus,
 .consultation-card select:focus,
 .consultation-card textarea:focus{
-
   border-color:#D4AF37;
-  box-shadow:0 0 8px rgba(212,175,55,.25);
+  background:#2a2a2a;
+  box-shadow:0 0 12px rgba(212,175,55,.2);
+}
 
+/* Validation States */
+.consultation-card input.input-error,
+.consultation-card select.input-error,
+.consultation-card textarea.input-error{
+  border-color:#ef4444 !important;
+  background:#261818 !important;
+  box-shadow:0 0 10px rgba(239,68,68,.25) !important;
+}
+
+.consultation-card input.input-valid,
+.consultation-card select.input-valid,
+.consultation-card textarea.input-valid{
+  border-color:rgba(212,175,55,.6);
 }
 
 /* ==========================
-   PLACEHOLDER
+   ERROR MESSAGE HELPER
+========================== */
+
+.error-message{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:#f87171;
+  font-size:12.5px;
+  font-weight:500;
+  margin-top:6px;
+  line-height:1.4;
+  animation:errorFadeIn .25s ease;
+}
+
+.error-message svg{
+  font-size:13px;
+  flex-shrink:0;
+  color:#ef4444;
+}
+
+@keyframes errorFadeIn{
+  from{
+    opacity:0;
+    transform:translateY(-4px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* ==========================
+   PLACEHOLDER & SELECT
 ========================== */
 
 .consultation-card input::placeholder,
 .consultation-card textarea::placeholder{
-
-  color:#a9a9a9;
+  color:#888;
   opacity:1;
-
 }
-
-/* ==========================
-   SELECT
-========================== */
 
 .consultation-card select{
-
-  color:#a9a9a9;
+  color:#fff;
   cursor:pointer;
-
 }
 
-.consultation-card select:valid{
-
+.consultation-card select option{
+  background:#1e1e1e;
   color:#fff;
+}
 
+.consultation-card select option[value=""]{
+  color:#888;
 }
 
 /* ==========================
@@ -116,82 +168,81 @@
 
 .consultation-card input[type="date"],
 .consultation-card input[type="time"]{
-
-  color:#a9a9a9;
-  cursor:pointer;
-
-}
-
-.consultation-card input[type="date"]:valid,
-.consultation-card input[type="time"]:valid{
-
   color:#fff;
-
+  cursor:pointer;
 }
-
-/* Calendar icon */
 
 .consultation-card input[type="date"]::-webkit-calendar-picker-indicator,
 .consultation-card input[type="time"]::-webkit-calendar-picker-indicator{
-
   filter:invert(1);
   cursor:pointer;
-
 }
 
 /* ==========================
-   TEXTAREA
+   TEXTAREA & FOOTER
 ========================== */
 
 .consultation-card textarea{
-
   resize:none;
-  min-height:140px;
+  min-height:120px;
+  line-height:1.5;
+}
 
+.textarea-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:4px;
+}
+
+.char-count{
+  margin-left:auto;
+  font-size:12px;
+  color:#777;
 }
 
 /* ==========================
-   DATE ROW
+   DATE & TIME ROW
 ========================== */
 
 .row{
-
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:18px;
-
+  gap:16px;
 }
 
 /* ==========================
-   BUTTON
+   SUBMIT BUTTON
 ========================== */
 
-.consultation-card button{
-
-  background:#D4AF37;
+.consultation-submit-btn{
+  background:linear-gradient(135deg, #D4AF37 0%, #ecd478 50%, #c49d28 100%);
+  background-size:200% auto;
   color:#111;
   border:none;
   padding:16px;
   border-radius:10px;
   font-size:16px;
   font-weight:700;
+  letter-spacing:0.5px;
   cursor:pointer;
-  transition:.3s;
-
+  transition:all .3s ease;
+  box-shadow:0 6px 20px rgba(212,175,55,.28);
+  margin-top:8px;
 }
 
-.consultation-card button:hover{
-
-  background:#f0c94d;
+.consultation-submit-btn:hover{
+  background-position:right center;
+  background-color:#f0c94d;
   transform:translateY(-2px);
-
+  box-shadow:0 10px 26px rgba(212,175,55,.45);
 }
 
-.consultation-card button:disabled{
-
-  opacity:.7;
+.consultation-submit-btn:disabled{
+  opacity:.65;
   cursor:not-allowed;
-
+  transform:none;
+  box-shadow:none;
 }
 
 /* ==========================
@@ -199,23 +250,20 @@
 ========================== */
 
 @media(max-width:768px){
+  .consultation-page{
+    padding:90px 16px 40px;
+  }
 
   .consultation-card{
-
-    padding:30px 22px;
-
+    padding:30px 20px;
   }
 
   .consultation-card h2{
-
-    font-size:30px;
-
+    font-size:28px;
   }
 
   .row{
-
     grid-template-columns:1fr;
-
+    gap:20px;
   }
-
 }

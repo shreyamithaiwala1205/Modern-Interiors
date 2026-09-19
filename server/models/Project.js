@@ -60,6 +60,22 @@ const projectSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+
+        // ==========================================
+        // RATING (cached from approved reviews)
+        // ==========================================
+
+        rating: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 5,
+        },
+
+        reviewCount: {
+            type: Number,
+            default: 0,
+        },
     },
     {
         timestamps: true,

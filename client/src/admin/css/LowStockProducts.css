@@ -136,6 +136,18 @@
     font-size:12px;
     font-weight:700;
     letter-spacing:1px;
+    white-space:nowrap;
+}
+
+.stock-warning.out{
+    background:#1f1f1f;
+    color:#f87171;
+    border:1px solid rgba(239,68,68,.5);
+}
+
+.stock-icon.out{
+    background:rgba(239,68,68,.14);
+    color:#f87171;
 }
 
 .stock-empty{

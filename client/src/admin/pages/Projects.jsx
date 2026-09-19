@@ -1,1798 +1,3222 @@
-import {
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 
 import axios from "axios";
 
 import {
-    Plus,
-    Search,
-    Eye,
-    Edit,
-    Trash2,
-    X,
-    Image as ImageIcon,
-    ChevronDown,
-    Check,
+  Trash2,
+  Pencil,
+  Eye,
+  Plus,
+  Upload,
+  Search,
+  ChevronDown,
+  Download,
+  MapPin,
 } from "lucide-react";
 
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 import AdminLayout from "../AdminLayout";
+
+import getImageUrl from "../../utils/imageUrl";
+
+import { useProjectCategories } from "../../context/ProjectCategoryContext";
+
 import "../css/Projects.css";
 
+
 const API =
-    "http://localhost:5000/api/admin/projects";
+  "http://localhost:5000/api/admin/projects";
 
-const IMAGE_BASE_URL =
-    "http://localhost:5000/uploads";
 
-const CATEGORY_OPTIONS = [
-    "Residential",
-    "Commercial",
-    "Office",
-    "Living Room",
-    "Bedroom",
-    "Kitchen",
-    "Dining Room",
-    "Bathroom",
-    "Hotel",
-    "Restaurant",
-    "Villa",
-    "Apartment",
-    "Furniture",
-    "Interior Design",
-    "Other",
+/* =====================================================
+   INDIA CITIES
+===================================================== */
+
+const indiaCities = [
+  "Ahmedabad",
+  "Amritsar",
+  "Aurangabad",
+  "Bengaluru",
+  "Bhopal",
+  "Bhubaneswar",
+  "Chandigarh",
+  "Chennai",
+  "Coimbatore",
+  "Dehradun",
+  "Delhi",
+  "Faridabad",
+  "Gandhinagar",
+  "Ghaziabad",
+  "Goa",
+  "Gurugram",
+  "Guwahati",
+  "Hyderabad",
+  "Indore",
+  "Jaipur",
+  "Jammu",
+  "Jamshedpur",
+  "Jodhpur",
+  "Kanpur",
+  "Kochi",
+  "Kolkata",
+  "Kota",
+  "Lucknow",
+  "Ludhiana",
+  "Madurai",
+  "Mangaluru",
+  "Meerut",
+  "Mumbai",
+  "Mysuru",
+  "Nagpur",
+  "Nashik",
+  "Noida",
+  "Patna",
+  "Prayagraj",
+  "Pune",
+  "Rajkot",
+  "Ranchi",
+  "Surat",
+  "Thane",
+  "Thiruvananthapuram",
+  "Udaipur",
+  "Vadodara",
+  "Varanasi",
+  "Vasai-Virar",
+  "Vijayawada",
+  "Visakhapatnam",
 ];
 
-const EMPTY_FORM = {
-    title: "",
-    category: "",
-    description: "",
-    location: "",
-    year: "",
-};
 
-const EMPTY_ERRORS = {
-    title: "",
-    category: "",
-    description: "",
-    location: "",
-    year: "",
-    image: "",
-};
+/* =====================================================
+   COMPONENT
+===================================================== */
 
 const Projects = () => {
-    // =====================================================
-    // DATA
-    // =====================================================
 
-    const [projects, setProjects] =
-        useState([]);
+  const {
+    categories: dbCategories,
+  } = useProjectCategories();
 
-    const [loading, setLoading] =
-        useState(true);
 
-    const [saving, setSaving] =
-        useState(false);
+  /* =====================================================
+     PROJECT DATA
+  ===================================================== */
 
-    // =====================================================
-    // SEARCH / FILTER
-    // =====================================================
+  const [projects, setProjects] =
+    useState([]);
 
-    const [search, setSearch] =
-        useState("");
+  const [loading, setLoading] =
+    useState(true);
 
-    const [categoryFilter, setCategoryFilter] =
-        useState("all");
+  const [error, setError] =
+    useState("");
 
-    // =====================================================
-    // MODAL
-    // =====================================================
 
-    const [modal, setModal] =
-        useState(null);
+  /* =====================================================
+     SEARCH / FILTER / SORT
+  ===================================================== */
 
-    const [selectedProject, setSelectedProject] =
-        useState(null);
+  const [search, setSearch] =
+    useState("");
 
-    // =====================================================
-    // FORM
-    // =====================================================
+  const [categoryFilter, setCategoryFilter] =
+    useState("all");
 
-    const [formData, setFormData] =
-        useState({
-            ...EMPTY_FORM,
-        });
+  const [sortBy, setSortBy] =
+    useState("newest");
 
-    const [errors, setErrors] =
-        useState({
-            ...EMPTY_ERRORS,
-        });
 
-    const [image, setImage] =
-        useState(null);
+  /* =====================================================
+     MODALS
+  ===================================================== */
 
-    const [preview, setPreview] =
-        useState("");
+  const [selectedProject, setSelectedProject] =
+    useState(null);
 
-    // =====================================================
-    // CATEGORY DROPDOWN
-    // =====================================================
+  const [showModal, setShowModal] =
+    useState(false);
 
-    const [categoryOpen, setCategoryOpen] =
-        useState(false);
+  const [showAddModal, setShowAddModal] =
+    useState(false);
 
-    const [categorySearch, setCategorySearch] =
-        useState("");
+  const [showEditModal, setShowEditModal] =
+    useState(false);
 
-    const categoryRef =
-        useRef(null);
 
-    // =====================================================
-    // FETCH PROJECTS
-    // =====================================================
+  /* =====================================================
+     EDIT
+  ===================================================== */
 
-    const fetchProjects = async () => {
-        try {
-            setLoading(true);
+  const [editProject, setEditProject] =
+    useState({});
 
-            const token =
-                localStorage.getItem(
-                    "token"
-                );
+  const [editImage, setEditImage] =
+    useState(null);
 
-            const response =
-                await axios.get(API, {
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`,
-                    },
-                });
+  const [editImagePreview, setEditImagePreview] =
+    useState("");
 
-            const list =
-                Array.isArray(
-                    response.data?.projects
-                )
-                    ? response.data.projects
-                    : [];
 
-            setProjects(list);
-        } catch (error) {
-            console.error(
-                "FETCH PROJECTS ERROR:",
-                error
-            );
+  /* =====================================================
+     ADD PROJECT
+  ===================================================== */
 
-            toast.error(
-                error.response?.data
-                    ?.message ||
-                    "Failed to load projects."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+  const [newProject, setNewProject] =
+    useState({
+      title: "",
+      category: "",
+      location: "",
+      year:
+        new Date()
+          .getFullYear()
+          .toString(),
+      description: "",
+      image: null,
+    });
 
-    useEffect(() => {
-        fetchProjects();
-    }, []);
 
-    // =====================================================
-    // CLOSE CATEGORY DROPDOWN ON OUTSIDE CLICK
-    // =====================================================
+  const [newImagePreview, setNewImagePreview] =
+    useState("");
 
-    useEffect(() => {
-        const handleOutsideClick = (
-            event
-        ) => {
-            if (
-                categoryRef.current &&
-                !categoryRef.current.contains(
-                    event.target
-                )
-            ) {
-                setCategoryOpen(false);
+
+  /* =====================================================
+     VALIDATION
+  ===================================================== */
+
+  const [validationErrors, setValidationErrors] =
+    useState({});
+
+
+  /* =====================================================
+     CATEGORY DROPDOWN
+  ===================================================== */
+
+  const [showCategoryDropdown, setShowCategoryDropdown] =
+    useState(false);
+
+  const [categorySearch, setCategorySearch] =
+    useState("");
+
+
+  /* =====================================================
+     LOCATION DROPDOWN
+  ===================================================== */
+
+  const [showLocationDropdown, setShowLocationDropdown] =
+    useState(false);
+
+  const [locationSearch, setLocationSearch] =
+    useState("");
+
+
+  /* =====================================================
+     CATEGORY REF
+  ===================================================== */
+
+  const categoryRef =
+    useRef(null);
+
+  const locationRef =
+    useRef(null);
+
+
+  /* =====================================================
+     PAGINATION
+  ===================================================== */
+
+  const [currentPage, setCurrentPage] =
+    useState(1);
+
+  const projectsPerPage = 5;
+
+
+  /* =====================================================
+     FETCH PROJECTS
+  ===================================================== */
+
+  useEffect(() => {
+
+    fetchProjects();
+
+  }, []);
+
+
+  const fetchProjects =
+    async () => {
+
+      try {
+
+        setLoading(true);
+
+        setError("");
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+
+        const { data } =
+          await axios.get(
+            API,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
             }
-        };
+          );
 
-        document.addEventListener(
-            "mousedown",
-            handleOutsideClick
+
+        setProjects(
+          Array.isArray(
+            data.projects
+          )
+            ? data.projects
+            : []
         );
 
-        return () => {
-            document.removeEventListener(
-                "mousedown",
-                handleOutsideClick
-            );
-        };
-    }, []);
+      } catch (err) {
 
-    // =====================================================
-    // DYNAMIC CATEGORIES
-    // =====================================================
+        console.error(
+          "FETCH PROJECTS ERROR:",
+          err
+        );
 
-    const availableCategories =
-        useMemo(() => {
-            const existing = projects
-                .map(
-                    (project) =>
-                        project.category
-                )
-                .filter(Boolean);
+        setError(
+          "Failed to load projects"
+        );
 
-            return [
-                ...new Set([
-                    ...CATEGORY_OPTIONS,
-                    ...existing,
-                ]),
-            ];
-        }, [projects]);
+      } finally {
 
-    const filteredCategoryOptions =
-        useMemo(() => {
-            const text =
-                categorySearch
-                    .trim()
+        setLoading(false);
+
+      }
+
+    };
+
+
+  /* =====================================================
+     FETCH CATEGORIES
+  ===================================================== */
+
+  const categoryOptions =
+    useMemo(() => {
+
+      const projectCategories =
+        projects
+          .map(
+            (project) =>
+              project.category
+          )
+          .filter(Boolean);
+
+
+      const contextCategories =
+        (dbCategories || [])
+          .map(
+            (category) =>
+              category.name ||
+              category.label ||
+              category
+          )
+          .filter(Boolean);
+
+
+      return [
+        ...new Set(
+          [
+            ...contextCategories,
+            ...projectCategories,
+          ]
+        ),
+      ];
+
+    }, [
+      projects,
+      dbCategories,
+    ]);
+
+
+  /* =====================================================
+     OUTSIDE CLICK
+  ===================================================== */
+
+  useEffect(() => {
+
+    const handleClickOutside =
+      (event) => {
+
+        if (
+          categoryRef.current &&
+          !categoryRef.current.contains(
+            event.target
+          )
+        ) {
+
+          setShowCategoryDropdown(
+            false
+          );
+
+        }
+
+
+        if (
+          locationRef.current &&
+          !locationRef.current.contains(
+            event.target
+          )
+        ) {
+
+          setShowLocationDropdown(
+            false
+          );
+
+        }
+
+      };
+
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
+
+    return () => {
+
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+
+    };
+
+  }, []);
+
+
+  /* =====================================================
+     RESET ADD FORM
+  ===================================================== */
+
+  const resetNewProject =
+    () => {
+
+      setNewProject({
+        title: "",
+        category: "",
+        location: "",
+        year:
+          new Date()
+            .getFullYear()
+            .toString(),
+        description: "",
+        image: null,
+      });
+
+      setNewImagePreview("");
+
+      setValidationErrors({});
+
+      setCategorySearch("");
+
+      setLocationSearch("");
+
+      setShowCategoryDropdown(
+        false
+      );
+
+      setShowLocationDropdown(
+        false
+      );
+
+    };
+
+
+  /* =====================================================
+     FILTER + SORT
+  ===================================================== */
+
+  const filteredProjects =
+    useMemo(() => {
+
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+
+      const result =
+        projects.filter(
+          (project) => {
+
+            const matchesSearch =
+              !query ||
+              String(
+                project.title || ""
+              )
+                .toLowerCase()
+                .includes(query) ||
+              String(
+                project.category || ""
+              )
+                .toLowerCase()
+                .includes(query) ||
+              String(
+                project.location || ""
+              )
+                .toLowerCase()
+                .includes(query) ||
+              String(
+                project.year || ""
+              )
+                .toLowerCase()
+                .includes(query);
+
+
+            const matchesCategory =
+              categoryFilter ===
+                "all"
+                ? true
+                : String(
+                    project.category ||
+                      ""
+                  )
+                    .toLowerCase() ===
+                  String(
+                    categoryFilter
+                  )
                     .toLowerCase();
 
-            if (!text) {
-                return availableCategories;
-            }
 
-            return availableCategories.filter(
-                (category) =>
-                    category
-                        .toLowerCase()
-                        .includes(text)
+            return (
+              matchesSearch &&
+              matchesCategory
             );
-        }, [
-            availableCategories,
-            categorySearch,
-        ]);
 
-    // =====================================================
-    // PROJECT FILTER
-    // =====================================================
+          }
+        );
 
-    const filteredProjects =
-        useMemo(() => {
-            const text =
-                search
-                    .trim()
-                    .toLowerCase();
 
-            return projects.filter(
-                (project) => {
-                    const title =
-                        String(
-                            project.title ||
-                                ""
-                        ).toLowerCase();
+      result.sort(
+        (a, b) => {
 
-                    const category =
-                        String(
-                            project.category ||
-                                ""
-                        ).toLowerCase();
+          if (
+            sortBy ===
+            "az"
+          ) {
 
-                    const location =
-                        String(
-                            project.location ||
-                                ""
-                        ).toLowerCase();
-
-                    const matchesSearch =
-                        title.includes(text) ||
-                        category.includes(text) ||
-                        location.includes(text);
-
-                    const matchesCategory =
-                        categoryFilter ===
-                        "all"
-                            ? true
-                            : project.category ===
-                              categoryFilter;
-
-                    return (
-                        matchesSearch &&
-                        matchesCategory
-                    );
-                }
+            return String(
+              a.title || ""
+            ).localeCompare(
+              String(
+                b.title || ""
+              )
             );
-        }, [
-            projects,
-            search,
-            categoryFilter,
-        ]);
 
-    // =====================================================
-    // RESET FORM
-    // =====================================================
+          }
 
-    const resetForm = () => {
-        setFormData({
-            ...EMPTY_FORM,
-        });
 
-        setErrors({
-            ...EMPTY_ERRORS,
-        });
+          if (
+            sortBy ===
+            "za"
+          ) {
 
-        setImage(null);
+            return String(
+              b.title || ""
+            ).localeCompare(
+              String(
+                a.title || ""
+              )
+            );
 
-        setPreview("");
+          }
 
-        setCategoryOpen(false);
 
-        setCategorySearch("");
-    };
+          if (
+            sortBy ===
+            "oldest"
+          ) {
 
-    // =====================================================
-    // OPEN ADD
-    // =====================================================
+            return (
+              new Date(
+                a.createdAt
+              ) -
+              new Date(
+                b.createdAt
+              )
+            );
 
-    const openAdd = () => {
-        resetForm();
+          }
 
-        setSelectedProject(null);
 
-        setModal("add");
-    };
-
-    // =====================================================
-    // OPEN VIEW
-    // =====================================================
-
-    const openView = (
-        project
-    ) => {
-        setSelectedProject(
-            project
-        );
-
-        setModal("view");
-    };
-
-    // =====================================================
-    // OPEN EDIT
-    // =====================================================
-
-    const openEdit = (
-        project
-    ) => {
-        setSelectedProject(
-            project
-        );
-
-        setFormData({
-            title:
-                project.title || "",
-
-            category:
-                project.category || "",
-
-            description:
-                project.description ||
-                "",
-
-            location:
-                project.location ||
-                "",
-
-            year:
-                project.year || "",
-        });
-
-        setErrors({
-            ...EMPTY_ERRORS,
-        });
-
-        setImage(null);
-
-        setPreview(
-            project.image
-                ? `${IMAGE_BASE_URL}/${project.image}`
-                : ""
-        );
-
-        setCategoryOpen(false);
-
-        setCategorySearch("");
-
-        setModal("edit");
-    };
-
-    // =====================================================
-    // CLOSE MODAL
-    // =====================================================
-
-    const closeModal = () => {
-        if (saving) {
-            return;
-        }
-
-        setModal(null);
-
-        setSelectedProject(
-            null
-        );
-
-        resetForm();
-    };
-
-    // =====================================================
-    // FORM CHANGE
-    // =====================================================
-
-    const handleChange = (
-        event
-    ) => {
-        const {
-            name,
-            value,
-        } = event.target;
-
-        setFormData(
-            (previous) => ({
-                ...previous,
-                [name]: value,
-            })
-        );
-
-        setErrors(
-            (previous) => ({
-                ...previous,
-                [name]: "",
-            })
-        );
-    };
-
-    // =====================================================
-    // CATEGORY SELECT
-    // =====================================================
-
-    const selectCategory = (
-        category
-    ) => {
-        setFormData(
-            (previous) => ({
-                ...previous,
-                category,
-            })
-        );
-
-        setErrors(
-            (previous) => ({
-                ...previous,
-                category: "",
-            })
-        );
-
-        setCategorySearch("");
-
-        setCategoryOpen(false);
-    };
-
-    // =====================================================
-    // IMAGE CHANGE
-    // =====================================================
-
-    const handleImageChange = (
-        event
-    ) => {
-        const file =
-            event.target.files?.[0];
-
-        if (!file) {
-            return;
-        }
-
-        const allowedTypes = [
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "image/webp",
-        ];
-
-        if (
-            !allowedTypes.includes(
-                file.type
+          return (
+            new Date(
+              b.createdAt
+            ) -
+            new Date(
+              a.createdAt
             )
-        ) {
-            setErrors(
-                (previous) => ({
-                    ...previous,
-                    image:
-                        "Only JPG, JPEG, PNG and WEBP images are allowed.",
-                })
-            );
+          );
 
-            event.target.value = "";
-
-            return;
         }
+      );
 
-        if (
-            file.size >
-            5 * 1024 * 1024
-        ) {
-            setErrors(
-                (previous) => ({
-                    ...previous,
-                    image:
-                        "Image size must be less than 5MB.",
-                })
-            );
 
-            event.target.value = "";
+      return result;
 
-            return;
-        }
+    }, [
+      projects,
+      search,
+      categoryFilter,
+      sortBy,
+    ]);
 
-        setErrors(
-            (previous) => ({
-                ...previous,
-                image: "",
-            })
-        );
 
-        setImage(file);
+  /* =====================================================
+     PAGINATION
+  ===================================================== */
 
-        setPreview(
-            URL.createObjectURL(
-                file
-            )
-        );
-    };
+  const indexOfLast =
+    currentPage *
+    projectsPerPage;
 
-    // =====================================================
-    // VALIDATE FORM
-    // =====================================================
 
-    const validateForm = () => {
-        const newErrors = {
-            ...EMPTY_ERRORS,
-        };
+  const indexOfFirst =
+    indexOfLast -
+    projectsPerPage;
 
-        const title =
-            formData.title.trim();
 
-        const category =
-            formData.category.trim();
+  const currentProjects =
+    filteredProjects.slice(
+      indexOfFirst,
+      indexOfLast
+    );
 
-        const description =
-            formData.description.trim();
 
-        const location =
-            formData.location.trim();
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        filteredProjects.length /
+          projectsPerPage
+      )
+    );
 
-        const year =
-            formData.year.trim();
 
-        // TITLE
-        if (!title) {
-            newErrors.title =
-                "Project title is required.";
-        } else if (
-            title.length < 3
-        ) {
-            newErrors.title =
-                "Project title must be at least 3 characters.";
-        } else if (
-            title.length > 100
-        ) {
-            newErrors.title =
-                "Project title must be less than 100 characters.";
-        }
+  useEffect(() => {
 
-        // CATEGORY
-        if (!category) {
-            newErrors.category =
-                "Please select a category.";
-        }
+    if (
+      currentPage >
+      totalPages
+    ) {
 
-        // DESCRIPTION
-        if (!description) {
-            newErrors.description =
-                "Project description is required.";
-        } else if (
-            description.length < 10
-        ) {
-            newErrors.description =
-                "Description must be at least 10 characters.";
-        } else if (
-            description.length > 1000
-        ) {
-            newErrors.description =
-                "Description must be less than 1000 characters.";
-        }
+      setCurrentPage(
+        totalPages
+      );
 
-        // LOCATION
-        if (!location) {
-            newErrors.location =
-                "Project location is required.";
-        } else if (
-            location.length < 2
-        ) {
-            newErrors.location =
-                "Please enter a valid location.";
-        }
-
-        // YEAR
-        if (!year) {
-            newErrors.year =
-                "Project year is required.";
-        } else if (
-            !/^\d{4}$/.test(year)
-        ) {
-            newErrors.year =
-                "Enter a valid 4-digit year.";
-        } else {
-            const numericYear =
-                Number(year);
-
-            if (
-                numericYear <
-                    2000 ||
-                numericYear >
-                    2100
-            ) {
-                newErrors.year =
-                    "Year must be between 2000 and 2100.";
-            }
-        }
-
-        // IMAGE
-        if (
-            modal === "add" &&
-            !image
-        ) {
-            newErrors.image =
-                "Project image is required.";
-        }
-
-        // DUPLICATE TITLE
-        const duplicateProject =
-            projects.find(
-                (project) => {
-                    const sameTitle =
-                        String(
-                            project.title ||
-                                ""
-                        )
-                            .trim()
-                            .toLowerCase() ===
-                        title.toLowerCase();
-
-                    if (
-                        modal ===
-                            "edit" &&
-                        selectedProject
-                    ) {
-                        return (
-                            sameTitle &&
-                            project._id !==
-                                selectedProject._id
-                        );
-                    }
-
-                    return sameTitle;
-                }
-            );
-
-        if (duplicateProject) {
-            newErrors.title =
-                "A project with this title already exists.";
-        }
-
-        setErrors(newErrors);
-
-        return Object.values(
-            newErrors
-        ).every(
-            (value) =>
-                !value
-        );
-    };
-
-    // =====================================================
-    // SAVE
-    // =====================================================
-
-    const saveProject = async (
-        event
-    ) => {
-        event.preventDefault();
-
-        if (!validateForm()) {
-            toast.error(
-                "Please fix the highlighted fields."
-            );
-
-            return;
-        }
-
-        try {
-            setSaving(true);
-
-            const token =
-                localStorage.getItem(
-                    "token"
-                );
-
-            const data =
-                new FormData();
-
-            data.append(
-                "title",
-                formData.title.trim()
-            );
-
-            data.append(
-                "category",
-                formData.category.trim()
-            );
-
-            data.append(
-                "description",
-                formData.description.trim()
-            );
-
-            data.append(
-                "location",
-                formData.location.trim()
-            );
-
-            data.append(
-                "year",
-                formData.year.trim()
-            );
-
-            if (image) {
-                data.append(
-                    "image",
-                    image
-                );
-            }
-
-            let response;
-
-            if (
-                modal === "edit" &&
-                selectedProject?._id
-            ) {
-                response =
-                    await axios.put(
-                        `${API}/${selectedProject._id}`,
-                        data,
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`,
-                            },
-                        }
-                    );
-            } else {
-                response =
-                    await axios.post(
-                        API,
-                        data,
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`,
-                            },
-                        }
-                    );
-            }
-
-            toast.success(
-                response.data?.message ||
-                    "Project saved successfully."
-            );
-
-            setModal(null);
-
-            setSelectedProject(
-                null
-            );
-
-            resetForm();
-
-            await fetchProjects();
-        } catch (error) {
-            console.error(
-                "SAVE PROJECT ERROR:",
-                error
-            );
-
-            toast.error(
-                error.response?.data
-                    ?.message ||
-                    "Failed to save project."
-            );
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    // =====================================================
-    // DELETE
-    // =====================================================
-
-    const deleteProject = async (
-        project
-    ) => {
-        const confirmed =
-            window.confirm(
-                `Delete project "${project.title}"?`
-            );
-
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            const token =
-                localStorage.getItem(
-                    "token"
-                );
-
-            const response =
-                await axios.delete(
-                    `${API}/${project._id}`,
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
-                );
-
-            toast.success(
-                response.data?.message ||
-                    "Project deleted successfully."
-            );
-
-            setProjects(
-                (previous) =>
-                    previous.filter(
-                        (item) =>
-                            item._id !==
-                            project._id
-                    )
-            );
-
-            if (
-                selectedProject?._id ===
-                project._id
-            ) {
-                setModal(null);
-
-                setSelectedProject(
-                    null
-                );
-            }
-        } catch (error) {
-            console.error(
-                "DELETE PROJECT ERROR:",
-                error
-            );
-
-            toast.error(
-                error.response?.data
-                    ?.message ||
-                    "Failed to delete project."
-            );
-        }
-    };
-
-    // =====================================================
-    // LOADING
-    // =====================================================
-
-    if (loading) {
-        return (
-            <AdminLayout>
-                <div className="projects-loading">
-                    Loading Projects...
-                </div>
-            </AdminLayout>
-        );
     }
 
+  }, [
+    currentPage,
+    totalPages,
+  ]);
+
+
+  /* =====================================================
+     STATISTICS
+  ===================================================== */
+
+  const totalProjects =
+    projects.length;
+
+
+  const totalCategories =
+    categoryOptions.length;
+
+
+  const totalLocations =
+    new Set(
+      projects
+        .map(
+          (project) =>
+            String(
+              project.location ||
+                ""
+            )
+              .trim()
+              .toLowerCase()
+        )
+        .filter(Boolean)
+    ).size;
+
+
+  const thisYear =
+    projects.filter(
+      (project) =>
+        new Date(
+          project.createdAt
+        ).getFullYear() ===
+        new Date().getFullYear()
+    ).length;
+
+
+  /* =====================================================
+     CREATE PROJECT VALIDATION
+  ===================================================== */
+
+  const validateNewProject =
+    () => {
+
+      const errors = {};
+
+
+      if (
+        !newProject.title ||
+        !newProject.title.trim()
+      ) {
+
+        errors.title =
+          "Project title is required.";
+
+      }
+
+
+      if (
+        !newProject.category
+      ) {
+
+        errors.category =
+          "Please select a category.";
+
+      }
+
+
+      if (
+        !newProject.location
+      ) {
+
+        errors.location =
+          "Project location is required.";
+
+      }
+
+
+      if (
+        !newProject.year
+      ) {
+
+        errors.year =
+          "Project year is required.";
+
+      } else if (
+        !/^\d{4}$/.test(
+          String(
+            newProject.year
+          )
+        )
+      ) {
+
+        errors.year =
+          "Please enter a valid 4-digit year.";
+
+      }
+
+
+      if (
+        !newProject.description ||
+        !newProject.description.trim()
+      ) {
+
+        errors.description =
+          "Project description is required.";
+
+      }
+
+
+      if (
+        !newProject.image
+      ) {
+
+        errors.image =
+          "Please select a project image.";
+
+      }
+
+
+      setValidationErrors(
+        errors
+      );
+
+
+      return (
+        Object.keys(
+          errors
+        ).length === 0
+      );
+
+    };
+
+
+  /* =====================================================
+     CREATE PROJECT
+  ===================================================== */
+
+  const addProject =
+    async () => {
+
+      if (
+        !validateNewProject()
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+
+        const formData =
+          new FormData();
+
+
+        formData.append(
+          "title",
+          newProject.title.trim()
+        );
+
+        formData.append(
+          "category",
+          newProject.category
+        );
+
+        formData.append(
+          "location",
+          newProject.location
+        );
+
+        formData.append(
+          "year",
+          String(
+            newProject.year
+          )
+        );
+
+        formData.append(
+          "description",
+          newProject.description.trim()
+        );
+
+        formData.append(
+          "image",
+          newProject.image
+        );
+
+
+        const { data } =
+          await axios.post(
+            API,
+            formData,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+                "Content-Type":
+                  "multipart/form-data",
+              },
+            }
+          );
+
+
+        toast.success(
+          data.message ||
+            "Project created successfully"
+        );
+
+
+        setShowAddModal(
+          false
+        );
+
+        resetNewProject();
+
+        setCurrentPage(
+          1
+        );
+
+        fetchProjects();
+
+      } catch (err) {
+
+        console.error(
+          "CREATE PROJECT ERROR:",
+          err
+        );
+
+        toast.error(
+          err.response?.data
+            ?.message ||
+            "Project creation failed."
+        );
+
+      }
+
+    };
+
+
+  /* =====================================================
+     UPDATE VALIDATION
+  ===================================================== */
+
+  const validateEditProject =
+    () => {
+
+      if (
+        !editProject.title ||
+        !String(
+          editProject.title
+        ).trim()
+      ) {
+
+        toast.error(
+          "Project title is required."
+        );
+
+        return false;
+
+      }
+
+
+      if (
+        !editProject.category
+      ) {
+
+        toast.error(
+          "Please select a category."
+        );
+
+        return false;
+
+      }
+
+
+      if (
+        editProject.year &&
+        !/^\d{4}$/.test(
+          String(
+            editProject.year
+          )
+        )
+      ) {
+
+        toast.error(
+          "Please enter a valid 4-digit year."
+        );
+
+        return false;
+
+      }
+
+
+      return true;
+
+    };
+
+
+  /* =====================================================
+     UPDATE PROJECT
+  ===================================================== */
+
+  const updateProject =
+    async () => {
+
+      if (
+        !validateEditProject()
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+
+        const formData =
+          new FormData();
+
+
+        formData.append(
+          "title",
+          String(
+            editProject.title
+          ).trim()
+        );
+
+        formData.append(
+          "category",
+          editProject.category ||
+            ""
+        );
+
+        formData.append(
+          "location",
+          editProject.location ||
+            ""
+        );
+
+        formData.append(
+          "year",
+          editProject.year ||
+            ""
+        );
+
+        formData.append(
+          "description",
+          editProject.description ||
+            ""
+        );
+
+
+        if (editImage) {
+
+          formData.append(
+            "image",
+            editImage
+          );
+
+        }
+
+
+        const { data } =
+          await axios.put(
+            `${API}/${editProject._id}`,
+            formData,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+                "Content-Type":
+                  "multipart/form-data",
+              },
+            }
+          );
+
+
+        toast.success(
+          data.message ||
+            "Project updated successfully"
+        );
+
+
+        setShowEditModal(
+          false
+        );
+
+        setShowModal(
+          false
+        );
+
+        setEditImage(
+          null
+        );
+
+        setEditImagePreview(
+          ""
+        );
+
+        fetchProjects();
+
+      } catch (err) {
+
+        console.error(
+          "UPDATE PROJECT ERROR:",
+          err
+        );
+
+        toast.error(
+          err.response?.data
+            ?.message ||
+            "Project update failed."
+        );
+
+      }
+
+    };
+
+
+  /* =====================================================
+     DELETE PROJECT
+  ===================================================== */
+
+  const deleteProject =
+    async (id) => {
+
+      if (
+        !window.confirm(
+          "Delete this project?"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+
+        const { data } =
+          await axios.delete(
+            `${API}/${id}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+
+        toast.success(
+          data.message ||
+            "Project deleted successfully"
+        );
+
+
+        setShowModal(
+          false
+        );
+
+        setSelectedProject(
+          null
+        );
+
+
+        fetchProjects();
+
+      } catch (err) {
+
+        toast.error(
+          err.response?.data
+            ?.message ||
+            "Delete Failed"
+        );
+
+      }
+
+    };
+
+
+  /* =====================================================
+     IMAGE SELECT - ADD
+  ===================================================== */
+
+  const handleNewImage =
+    (event) => {
+
+      const file =
+        event.target.files?.[0];
+
+
+      if (!file) {
+        return;
+      }
+
+
+      setNewProject({
+        ...newProject,
+        image: file,
+      });
+
+
+      setNewImagePreview(
+        URL.createObjectURL(
+          file
+        )
+      );
+
+
+      setValidationErrors(
+        (prev) => ({
+          ...prev,
+          image: "",
+        })
+      );
+
+    };
+
+
+  /* =====================================================
+     IMAGE SELECT - EDIT
+  ===================================================== */
+
+  const handleEditImage =
+    (event) => {
+
+      const file =
+        event.target.files?.[0];
+
+
+      if (!file) {
+        return;
+      }
+
+
+      setEditImage(
+        file
+      );
+
+
+      setEditImagePreview(
+        URL.createObjectURL(
+          file
+        )
+      );
+
+    };
+
+
+  /* =====================================================
+     EXPORT ALL PROJECTS
+  ===================================================== */
+
+  const exportProjects =
+    () => {
+
+      if (
+        projects.length === 0
+      ) {
+
+        toast.error(
+          "No projects available to export."
+        );
+
+        return;
+
+      }
+
+
+      const headers = [
+        "No",
+        "Title",
+        "Category",
+        "Location",
+        "Year",
+        "Description",
+        "Created At",
+      ];
+
+
+      const rows =
+        projects.map(
+          (
+            project,
+            index
+          ) => [
+
+            index + 1,
+
+            project.title || "",
+
+            project.category || "",
+
+            project.location || "",
+
+            project.year || "",
+
+            String(
+              project.description ||
+                ""
+            )
+              .replace(
+                /"/g,
+                '""'
+              ),
+
+            project.createdAt
+              ? new Date(
+                  project.createdAt
+                ).toLocaleDateString(
+                  "en-IN"
+                )
+              : "",
+
+          ]
+        );
+
+
+      const csvRows = [
+        headers,
+        ...rows,
+      ]
+        .map(
+          (row) =>
+            row
+              .map(
+                (value) =>
+                  `"${String(
+                    value ?? ""
+                  ).replace(
+                    /"/g,
+                    '""'
+                  )}"`
+              )
+              .join(",")
+        )
+        .join("\n");
+
+
+      const blob =
+        new Blob(
+          [csvRows],
+          {
+            type:
+              "text/csv;charset=utf-8;",
+          }
+        );
+
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+      link.href =
+        url;
+
+      link.download =
+        `modern-interiors-projects-${new Date()
+          .toISOString()
+          .split("T")[0]}.csv`;
+
+
+      document.body.appendChild(
+        link
+      );
+
+      link.click();
+
+      document.body.removeChild(
+        link
+      );
+
+      URL.revokeObjectURL(
+        url
+      );
+
+      toast.success(
+        "All projects exported successfully."
+      );
+
+    };
+
+
+  /* =====================================================
+     CATEGORY FILTER
+  ===================================================== */
+
+  const filteredCategoryOptions =
+    categoryOptions.filter(
+      (category) =>
+        String(
+          category
+        )
+          .toLowerCase()
+          .includes(
+            categorySearch
+              .toLowerCase()
+          )
+    );
+
+
+  /* =====================================================
+     LOCATION FILTER
+  ===================================================== */
+
+  const filteredCities =
+    indiaCities.filter(
+      (city) =>
+        city
+          .toLowerCase()
+          .includes(
+            locationSearch
+              .toLowerCase()
+          )
+    );
+
+
+  /* =====================================================
+     LOADING
+  ===================================================== */
+
+  if (loading) {
+
     return (
-        <AdminLayout>
-            <div className="projects-page">
+      <AdminLayout>
 
-                {/* =================================================
-                    HEADER
-                ================================================= */}
+        <h2>
+          Loading Projects...
+        </h2>
 
-                <div className="projects-header">
+      </AdminLayout>
+    );
 
-                    <div>
-                        <h1>
-                            Projects
-                        </h1>
+  }
 
-                        <p>
-                            Manage your Modern Interiors gallery projects.
-                        </p>
-                    </div>
 
-                    <button
-                        type="button"
-                        className="add-project-btn"
-                        onClick={
-                            openAdd
-                        }
-                    >
-                        <Plus
-                            size={18}
-                        />
+  /* =====================================================
+     ERROR
+  ===================================================== */
 
-                        Add Project
-                    </button>
+  if (error) {
 
-                </div>
+    return (
+      <AdminLayout>
 
-                {/* =================================================
-                    TOOLBAR
-                ================================================= */}
+        <h2>
+          {error}
+        </h2>
 
-                <div className="projects-toolbar">
+      </AdminLayout>
+    );
 
-                    <div className="project-search">
+  }
 
-                        <Search
-                            size={18}
-                        />
 
-                        <input
-                            type="text"
-                            placeholder="Search project, category or location..."
-                            value={search}
-                            onChange={(event) =>
-                                setSearch(
-                                    event.target
-                                        .value
-                                )
-                            }
-                        />
+  /* =====================================================
+     JSX
+  ===================================================== */
 
-                    </div>
+  return (
 
-                    <select
-                        value={
-                            categoryFilter
-                        }
-                        onChange={(event) =>
-                            setCategoryFilter(
-                                event.target
-                                    .value
-                            )
-                        }
-                    >
-                        <option value="all">
-                            All Categories
-                        </option>
+    <AdminLayout>
 
-                        {availableCategories.map(
-                            (
-                                category
-                            ) => (
-                                <option
-                                    key={
-                                        category
-                                    }
-                                    value={
-                                        category
-                                    }
-                                >
-                                    {
-                                        category
-                                    }
-                                </option>
-                            )
-                        )}
-                    </select>
+      <div className="products-page">
 
-                </div>
 
-                {/* =================================================
-                    PROJECT GRID
-                ================================================= */}
+        {/* ==========================================
+            PAGE HEADING
+        ========================================== */}
 
-                <div className="projects-grid">
+        <div className="projects-heading-row">
 
-                    {filteredProjects.length >
-                    0 ? (
-                        filteredProjects.map(
-                            (
-                                project
-                            ) => (
-                                <div
-                                    className="project-card"
-                                    key={
-                                        project._id
-                                    }
-                                >
+          <h1 className="products-title">
+            Projects Management
+          </h1>
 
-                                    <div className="project-image-wrapper">
 
-                                        {project.image ? (
-                                            <img
-                                                src={`${IMAGE_BASE_URL}/${project.image}`}
-                                                alt={
-                                                    project.title
-                                                }
-                                                className="project-image"
-                                            />
-                                        ) : (
-                                            <div className="project-no-image">
-                                                <ImageIcon
-                                                    size={
-                                                        42
-                                                    }
-                                                />
-                                            </div>
-                                        )}
+          <button
+            type="button"
+            className="project-add-btn"
+            onClick={() => {
 
-                                        <div className="project-category-badge">
-                                            {
-                                                project.category
-                                            }
-                                        </div>
+              resetNewProject();
 
-                                    </div>
+              setShowAddModal(
+                true
+              );
 
-                                    <div className="project-card-body">
+            }}
+          >
 
-                                        <h3>
-                                            {
-                                                project.title
-                                            }
-                                        </h3>
+            <Plus size={17} />
 
-                                        <p>
-                                            {
-                                                project.description ||
-                                                "No description available."
-                                            }
-                                        </p>
+            <span>
+              Add Project
+            </span>
 
-                                        <div className="project-meta">
+          </button>
 
-                                            <span>
-                                                {
-                                                    project.location ||
-                                                    "-"
-                                                }
-                                            </span>
+        </div>
 
-                                            <span>
-                                                {
-                                                    project.year ||
-                                                    "-"
-                                                }
-                                            </span>
 
-                                        </div>
+        {/* ==========================================
+            STATISTICS
+        ========================================== */}
 
-                                        <div className="project-actions">
+        <div className="products-stats-grid">
 
-                                            <button
-                                                type="button"
-                                                className="project-view-btn"
-                                                onClick={() =>
-                                                    openView(
-                                                        project
-                                                    )
-                                                }
-                                            >
-                                                <Eye
-                                                    size={
-                                                        16
-                                                    }
-                                                />
 
-                                                View
-                                            </button>
+          <div className="stats-card">
 
-                                            <button
-                                                type="button"
-                                                className="project-edit-btn"
-                                                onClick={() =>
-                                                    openEdit(
-                                                        project
-                                                    )
-                                                }
-                                            >
-                                                <Edit
-                                                    size={
-                                                        16
-                                                    }
-                                                />
+            <h3>
+              Total Projects :
+            </h3>
 
-                                                Edit
-                                            </button>
+            <span>
+              {totalProjects}
+            </span>
 
-                                            <button
-                                                type="button"
-                                                className="project-delete-btn"
-                                                onClick={() =>
-                                                    deleteProject(
-                                                        project
-                                                    )
-                                                }
-                                            >
-                                                <Trash2
-                                                    size={
-                                                        16
-                                                    }
-                                                />
-                                            </button>
+          </div>
 
-                                        </div>
 
-                                    </div>
+          <div className="stats-card">
 
-                                </div>
-                            )
-                        )
-                    ) : (
-                        <div className="projects-empty">
+            <h3>
+              Categories
+            </h3>
 
-                            <ImageIcon
-                                size={48}
-                            />
+            <span>
+              {totalCategories}
+            </span>
 
-                            <h3>
-                                No Projects Found
-                            </h3>
+          </div>
 
-                            <p>
-                                Add your first gallery project.
-                            </p>
 
-                        </div>
-                    )}
+          <div className="stats-card">
 
-                </div>
+            <h3>
+              Total Locations
+            </h3>
+
+            <span>
+              {totalLocations}
+            </span>
+
+          </div>
+
+
+          <div className="stats-card">
+
+            <h3>
+              This Year
+            </h3>
+
+            <span>
+              {thisYear}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        {/* ==========================================
+            TOOLBAR
+        ========================================== */}
+
+        <div className="projects-toolbar">
+
+
+          <div className="projects-toolbar-left">
+
+            <div className="products-count">
+
+              Projects :{" "}
+
+              <span>
+                {
+                  filteredProjects.length
+                }
+              </span>
 
             </div>
 
-            {/* =====================================================
-                MODAL
-            ====================================================== */}
 
-            {modal && (
-                <div
-                    className="project-modal-overlay"
-                    onClick={
-                        closeModal
-                    }
-                >
+            <button
+              type="button"
+              className="project-export-btn"
+              onClick={
+                exportProjects
+              }
+            >
 
-                    <div
-                        className="project-modal"
-                        onClick={(event) =>
-                            event.stopPropagation()
-                        }
+              <Download size={16} />
+
+              <span>
+                Export CSV
+              </span>
+
+            </button>
+
+          </div>
+
+
+          <div className="projects-toolbar-right">
+
+
+            <input
+              type="text"
+              placeholder="Search project..."
+              className="search-box"
+              value={search}
+              onChange={(e) => {
+
+                setSearch(
+                  e.target.value
+                );
+
+                setCurrentPage(
+                  1
+                );
+
+              }}
+            />
+
+
+            <select
+              className="filter-box"
+              value={
+                categoryFilter
+              }
+              onChange={(e) => {
+
+                setCategoryFilter(
+                  e.target.value
+                );
+
+                setCurrentPage(
+                  1
+                );
+
+              }}
+            >
+
+              <option value="all">
+                All Categories
+              </option>
+
+              {categoryOptions.map(
+                (category) => (
+
+                  <option
+                    key={category}
+                    value={category}
+                  >
+                    {category}
+                  </option>
+
+                )
+              )}
+
+            </select>
+
+
+            <select
+              className="filter-box"
+              value={
+                sortBy
+              }
+              onChange={(e) => {
+
+                setSortBy(
+                  e.target.value
+                );
+
+                setCurrentPage(
+                  1
+                );
+
+              }}
+            >
+
+              <option value="newest">
+                Newest
+              </option>
+
+              <option value="oldest">
+                Oldest
+              </option>
+
+              <option value="az">
+                A-Z
+              </option>
+
+              <option value="za">
+                Z-A
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+        {/* ==========================================
+            TABLE
+        ========================================== */}
+
+        <div className="products-table">
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  #
+                </th>
+
+                <th>
+                  Image
+                </th>
+
+                <th>
+                  Title
+                </th>
+
+                <th>
+                  Category
+                </th>
+
+                <th>
+                  Location
+                </th>
+
+                <th>
+                  Year
+                </th>
+
+                <th>
+                  Created At
+                </th>
+
+                <th>
+                  Actions
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+            <tbody>
+
+              {currentProjects.length >
+              0 ? (
+
+                currentProjects.map(
+                  (
+                    project,
+                    index
+                  ) => (
+
+                    <tr
+                      key={
+                        project._id
+                      }
                     >
 
-                        {/* =================================================
-                            MODAL HEADER
-                        ================================================= */}
+                      <td>
+                        {
+                          indexOfFirst +
+                          index +
+                          1
+                        }
+                      </td>
 
-                        <div className="project-modal-header">
 
-                            <div>
-                                <span>
-                                    PROJECT
-                                </span>
+                      <td>
 
-                                <h2>
-                                    {modal ===
-                                    "add"
-                                        ? "Add Project"
-                                        : modal ===
-                                          "edit"
-                                        ? "Edit Project"
-                                        : "Project Details"}
-                                </h2>
-                            </div>
+                        <img
+                          src={getImageUrl(
+                            project.image
+                          )}
+                          alt={
+                            project.title
+                          }
+                          className="product-thumb"
+                        />
 
-                            <button
-                                type="button"
-                                className="project-close-btn"
-                                onClick={
-                                    closeModal
+                      </td>
+
+
+                      <td>
+
+                        <strong>
+                          {
+                            project.title
+                          }
+                        </strong>
+
+                      </td>
+
+
+                      <td>
+                        {
+                          project.category ||
+                          "—"
+                        }
+                      </td>
+
+
+                      <td>
+                        {
+                          project.location ||
+                          "—"
+                        }
+                      </td>
+
+
+                      <td>
+                        {
+                          project.year ||
+                          "—"
+                        }
+                      </td>
+
+
+                      <td>
+
+                        {
+                          project.createdAt
+                            ? new Date(
+                                project.createdAt
+                              ).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day:
+                                    "numeric",
+                                  month:
+                                    "short",
+                                  year:
+                                    "numeric",
                                 }
-                                disabled={
-                                    saving
-                                }
-                            >
-                                <X
-                                    size={20}
-                                />
-                            </button>
+                              )
+                            : "—"
+                        }
+
+                      </td>
+
+
+                      <td className="action-buttons">
+
+
+                        <button
+                          type="button"
+                          className="action-btn view-btn"
+                          title="View Project"
+                          onClick={() => {
+
+                            setSelectedProject(
+                              project
+                            );
+
+                            setShowModal(
+                              true
+                            );
+
+                          }}
+                        >
+
+                          <Eye
+                            size={17}
+                          />
+
+                        </button>
+
+
+                        <button
+                          type="button"
+                          className="action-btn edit-btn"
+                          title="Edit Project"
+                          onClick={() => {
+
+                            setEditProject(
+                              {
+                                ...project,
+                              }
+                            );
+
+                            setEditImage(
+                              null
+                            );
+
+                            setEditImagePreview(
+                              getImageUrl(
+                                project.image
+                              )
+                            );
+
+                            setShowEditModal(
+                              true
+                            );
+
+                          }}
+                        >
+
+                          <Pencil
+                            size={17}
+                          />
+
+                        </button>
+
+
+                        <button
+                          type="button"
+                          className="action-btn delete-btn"
+                          title="Delete Project"
+                          onClick={() =>
+                            deleteProject(
+                              project._id
+                            )
+                          }
+                        >
+
+                          <Trash2
+                            size={17}
+                          />
+
+                        </button>
+
+                      </td>
+
+                    </tr>
+
+                  )
+                )
+
+              ) : (
+
+                <tr>
+
+                  <td
+                    colSpan="8"
+                    style={{
+                      textAlign:
+                        "center",
+                      padding:
+                        "30px",
+                    }}
+                  >
+                    No Projects Found
+                  </td>
+
+                </tr>
+
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+
+        {/* ==========================================
+            PAGINATION
+        ========================================== */}
+
+        <div className="pagination">
+
+          <button
+            type="button"
+            disabled={
+              currentPage === 1
+            }
+            onClick={() =>
+              setCurrentPage(
+                currentPage - 1
+              )
+            }
+            title="Previous Page"
+          >
+            ‹
+          </button>
+
+
+          {[
+            ...Array(
+              totalPages
+            ),
+          ].map(
+            (
+              _,
+              index
+            ) => (
+
+              <button
+                type="button"
+                key={index}
+                className={
+                  currentPage ===
+                  index + 1
+                    ? "active-page"
+                    : ""
+                }
+                onClick={() =>
+                  setCurrentPage(
+                    index + 1
+                  )
+                }
+              >
+                {
+                  index + 1
+                }
+              </button>
+
+            )
+          )}
+
+
+          <button
+            type="button"
+            disabled={
+              currentPage ===
+              totalPages
+            }
+            onClick={() =>
+              setCurrentPage(
+                currentPage + 1
+              )
+            }
+            title="Next Page"
+          >
+            ›
+          </button>
+
+        </div>
+
+
+        {/* ==========================================
+            VIEW PROJECT MODAL
+        ========================================== */}
+
+        {showModal &&
+          selectedProject && (
+
+          <div
+            className="modal-overlay"
+            onClick={() =>
+              setShowModal(
+                false
+              )
+            }
+          >
+
+            <div
+              className="product-modal"
+              onClick={(e) =>
+                e.stopPropagation()
+              }
+            >
+
+              <div className="modal-header">
+
+                <div>
+
+                  <span className="project-modal-eyebrow">
+                    PROJECT
+                  </span>
+
+                  <h2>
+                    Project Details
+                  </h2>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="close-btn"
+                  onClick={() =>
+                    setShowModal(
+                      false
+                    )
+                  }
+                >
+                  ✕
+                </button>
+
+              </div>
+
+
+              <div className="modal-body">
+
+                <img
+                  src={getImageUrl(
+                    selectedProject.image
+                  )}
+                  alt={
+                    selectedProject.title
+                  }
+                  className="product-preview"
+                />
+
+
+                <div className="product-info">
+
+                  <p>
+                    <strong>
+                      Title :
+                    </strong>{" "}
+                    {
+                      selectedProject.title
+                    }
+                  </p>
+
+
+                  <p>
+                    <strong>
+                      Category :
+                    </strong>{" "}
+                    {
+                      selectedProject.category ||
+                      "-"
+                    }
+                  </p>
+
+
+                  <p>
+                    <strong>
+                      Location :
+                    </strong>{" "}
+                    {
+                      selectedProject.location ||
+                      "-"
+                    }
+                  </p>
+
+
+                  <p>
+                    <strong>
+                      Year :
+                    </strong>{" "}
+                    {
+                      selectedProject.year ||
+                      "-"
+                    }
+                  </p>
+
+
+                  <p>
+                    <strong>
+                      Description :
+                    </strong>
+                  </p>
+
+
+                  <p>
+                    {
+                      selectedProject.description ||
+                      "No description available."
+                    }
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="modal-actions">
+
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-secondary"
+                  onClick={() =>
+                    setShowModal(
+                      false
+                    )
+                  }
+                >
+                  Close
+                </button>
+
+
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-edit"
+                  onClick={() => {
+
+                    setEditProject(
+                      {
+                        ...selectedProject,
+                      }
+                    );
+
+                    setEditImage(
+                      null
+                    );
+
+                    setEditImagePreview(
+                      getImageUrl(
+                        selectedProject.image
+                      )
+                    );
+
+                    setShowModal(
+                      false
+                    );
+
+                    setShowEditModal(
+                      true
+                    );
+
+                  }}
+                >
+
+                  <Pencil size={15} />
+
+                  <span>
+                    Edit Project
+                  </span>
+
+                </button>
+
+
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-danger"
+                  onClick={() =>
+                    deleteProject(
+                      selectedProject._id
+                    )
+                  }
+                >
+
+                  <Trash2 size={15} />
+
+                  <span>
+                    Delete
+                  </span>
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+
+        {/* ==========================================
+            EDIT PROJECT MODAL
+        ========================================== */}
+
+        {showEditModal && (
+
+          <div
+            className="modal-overlay"
+            onClick={() =>
+              setShowEditModal(
+                false
+              )
+            }
+          >
+
+            <div
+              className="product-modal"
+              onClick={(e) =>
+                e.stopPropagation()
+              }
+            >
+
+              <div className="modal-header">
+
+                <div>
+
+                  <span className="project-modal-eyebrow">
+                    PROJECT
+                  </span>
+
+                  <h2>
+                    Edit Project
+                  </h2>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="close-btn"
+                  onClick={() =>
+                    setShowEditModal(
+                      false
+                    )
+                  }
+                >
+                  ✕
+                </button>
+
+              </div>
+
+
+              <div className="modal-body">
+
+                <div className="edit-form">
+
+
+                  <label>
+                    Project Title *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={
+                      editProject.title ||
+                      ""
+                    }
+                    placeholder="Project Title"
+                    onChange={(e) =>
+                      setEditProject({
+                        ...editProject,
+                        title:
+                          e.target.value,
+                      })
+                    }
+                  />
+
+
+                  <label>
+                    Category *
+                  </label>
+
+                  <div
+                    className="project-category-picker"
+                    ref={
+                      categoryRef
+                    }
+                  >
+
+                    <button
+                      type="button"
+                      className="project-category-trigger"
+                      onClick={() => {
+
+                        setShowCategoryDropdown(
+                          !showCategoryDropdown
+                        );
+
+                        setCategorySearch(
+                          ""
+                        );
+
+                      }}
+                    >
+
+                      <span
+                        className={
+                          editProject.category
+                            ? "selected-category"
+                            : "category-placeholder"
+                        }
+                      >
+                        {
+                          editProject.category ||
+                          "Select Category"
+                        }
+                      </span>
+
+
+                      <ChevronDown
+                        size={17}
+                      />
+
+                    </button>
+
+
+                    {showCategoryDropdown && (
+
+                      <div className="project-category-dropdown">
+
+                        <div className="project-category-search">
+
+                          <Search
+                            size={16}
+                          />
+
+                          <input
+                            type="text"
+                            placeholder="Search category..."
+                            value={
+                              categorySearch
+                            }
+                            onChange={(e) =>
+                              setCategorySearch(
+                                e.target.value
+                              )
+                            }
+                            autoFocus
+                          />
 
                         </div>
 
-                        {/* =================================================
-                            VIEW
-                        ================================================= */}
-
-                        {modal ===
-                            "view" &&
-                            selectedProject && (
-                                <div className="project-view-body">
-
-                                    <div className="project-view-image">
-
-                                        {selectedProject.image ? (
-                                            <img
-                                                src={`${IMAGE_BASE_URL}/${selectedProject.image}`}
-                                                alt={
-                                                    selectedProject.title
-                                                }
-                                            />
-                                        ) : (
-                                            <div className="project-no-image">
-                                                <ImageIcon
-                                                    size={
-                                                        45
-                                                    }
-                                                />
-                                            </div>
-                                        )}
-
-                                    </div>
-
-                                    <div className="project-view-info">
-
-                                        <h3>
-                                            {
-                                                selectedProject.title
-                                            }
-                                        </h3>
-
-                                        <div className="project-view-grid">
-
-                                            <div>
-                                                <span>
-                                                    Category
-                                                </span>
-
-                                                <strong>
-                                                    {
-                                                        selectedProject.category
-                                                    }
-                                                </strong>
-                                            </div>
-
-                                            <div>
-                                                <span>
-                                                    Location
-                                                </span>
-
-                                                <strong>
-                                                    {
-                                                        selectedProject.location ||
-                                                        "-"
-                                                    }
-                                                </strong>
-                                            </div>
-
-                                            <div>
-                                                <span>
-                                                    Year
-                                                </span>
-
-                                                <strong>
-                                                    {
-                                                        selectedProject.year ||
-                                                        "-"
-                                                    }
-                                                </strong>
-                                            </div>
-
-                                        </div>
-
-                                        <div className="project-description-box">
-
-                                            <span>
-                                                Description
-                                            </span>
-
-                                            <p>
-                                                {
-                                                    selectedProject.description ||
-                                                    "No description available."
-                                                }
-                                            </p>
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="project-modal-footer">
-
-                                        <button
-                                            type="button"
-                                            className="project-modal-close"
-                                            onClick={
-                                                closeModal
-                                            }
-                                        >
-                                            Close
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            className="project-modal-edit"
-                                            onClick={() =>
-                                                openEdit(
-                                                    selectedProject
-                                                )
-                                            }
-                                        >
-                                            <Edit
-                                                size={
-                                                    16
-                                                }
-                                            />
-
-                                            Edit Project
-                                        </button>
-
-                                    </div>
-
-                                </div>
-                            )}
-
-                        {/* =================================================
-                            ADD / EDIT FORM
-                        ================================================= */}
-
-                        {(modal ===
-                            "add" ||
-                            modal ===
-                                "edit") && (
-                            <form
-                                className="project-form"
-                                onSubmit={
-                                    saveProject
-                                }
-                            >
-
-                                {/* TITLE */}
-
-                                <div className="project-form-group">
-
-                                    <label>
-                                        Project Title *
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        value={
-                                            formData.title
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        placeholder="Modern Luxury Living Room"
-                                        maxLength={
-                                            100
-                                        }
-                                    />
-
-                                    {errors.title && (
-                                        <small className="project-form-error">
-                                            {
-                                                errors.title
-                                            }
-                                        </small>
-                                    )}
-
-                                </div>
-
-                                {/* CATEGORY + YEAR */}
-
-                                <div className="project-form-row">
-
-                                    {/* CATEGORY */}
-
-                                    <div
-                                        className="project-form-group"
-                                        ref={
-                                            categoryRef
-                                        }
-                                    >
-                                        <label>
-                                            Category *
-                                        </label>
-
-                                        <button
-                                            type="button"
-                                            className={`category-select ${
-                                                categoryOpen
-                                                    ? "open"
-                                                    : ""
-                                            } ${
-                                                errors.category
-                                                    ? "has-error"
-                                                    : ""
-                                            }`}
-                                            onClick={() =>
-                                                setCategoryOpen(
-                                                    (
-                                                        previous
-                                                    ) =>
-                                                        !previous
-                                                )
-                                            }
-                                        >
-                                            <span>
-                                                {formData.category ||
-                                                    "Select Category"}
-                                            </span>
-
-                                            <ChevronDown
-                                                size={
-                                                    17
-                                                }
-                                            />
-                                        </button>
-
-                                        {categoryOpen && (
-                                            <div className="category-dropdown">
-
-                                                <div className="category-search">
-
-                                                    <Search
-                                                        size={
-                                                            15
-                                                        }
-                                                    />
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Search category..."
-                                                        value={
-                                                            categorySearch
-                                                        }
-                                                        onChange={(
-                                                            event
-                                                        ) =>
-                                                            setCategorySearch(
-                                                                event
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                        autoFocus
-                                                    />
-
-                                                </div>
-
-                                                <div className="category-options">
-
-                                                    {filteredCategoryOptions.length >
-                                                    0 ? (
-                                                        filteredCategoryOptions.map(
-                                                            (
-                                                                category
-                                                            ) => (
-                                                                <button
-                                                                    type="button"
-                                                                    key={
-                                                                        category
-                                                                    }
-                                                                    className={
-                                                                        formData.category ===
-                                                                        category
-                                                                            ? "selected"
-                                                                            : ""
-                                                                    }
-                                                                    onClick={() =>
-                                                                        selectCategory(
-                                                                            category
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <span>
-                                                                        {
-                                                                            category
-                                                                        }
-                                                                    </span>
-
-                                                                    {formData.category ===
-                                                                        category && (
-                                                                        <Check
-                                                                            size={
-                                                                                15
-                                                                            }
-                                                                        />
-                                                                    )}
-                                                                </button>
-                                                            )
-                                                        )
-                                                    ) : (
-                                                        <div className="category-empty">
-                                                            No category found.
-                                                        </div>
-                                                    )}
-
-                                                </div>
-
-                                            </div>
-                                        )}
-
-                                        {errors.category && (
-                                            <small className="project-form-error">
-                                                {
-                                                    errors.category
-                                                }
-                                            </small>
-                                        )}
-                                    </div>
-
-                                    {/* YEAR */}
-
-                                    <div className="project-form-group">
-
-                                        <label>
-                                            Year *
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            name="year"
-                                            value={
-                                                formData.year
-                                            }
-                                            onChange={(
-                                                event
-                                            ) => {
-                                                const value =
-                                                    event
-                                                        .target
-                                                        .value;
-
-                                                if (
-                                                    /^\d{0,4}$/.test(
-                                                        value
-                                                    )
-                                                ) {
-                                                    handleChange(
-                                                        event
-                                                    );
-                                                }
-                                            }}
-                                            placeholder="2026"
-                                            inputMode="numeric"
-                                            maxLength={
-                                                4
-                                            }
-                                        />
-
-                                        {errors.year && (
-                                            <small className="project-form-error">
-                                                {
-                                                    errors.year
-                                                }
-                                            </small>
-                                        )}
-
-                                    </div>
-
-                                </div>
-
-                                {/* LOCATION */}
-
-                                <div className="project-form-group">
-
-                                    <label>
-                                        Location *
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        value={
-                                            formData.location
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        placeholder="Surat, Gujarat"
-                                        maxLength={
-                                            150
-                                        }
-                                    />
-
-                                    {errors.location && (
-                                        <small className="project-form-error">
-                                            {
-                                                errors.location
-                                            }
-                                        </small>
-                                    )}
-
-                                </div>
-
-                                {/* DESCRIPTION */}
-
-                                <div className="project-form-group">
-
-                                    <label>
-                                        Description *
-                                    </label>
-
-                                    <textarea
-                                        name="description"
-                                        rows="4"
-                                        value={
-                                            formData.description
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        placeholder="Describe the interior project..."
-                                        maxLength={
-                                            1000
-                                        }
-                                    />
-
-                                    <div className="project-text-count">
-                                        {
-                                            formData.description
-                                                .length
-                                        }
-                                        /1000
-                                    </div>
-
-                                    {errors.description && (
-                                        <small className="project-form-error">
-                                            {
-                                                errors.description
-                                            }
-                                        </small>
-                                    )}
-
-                                </div>
-
-                                {/* IMAGE */}
-
-                                <div className="project-form-group">
-
-                                    <label>
-                                        Project Image{" "}
-                                        {modal ===
-                                            "add" &&
-                                            "*"}
-                                    </label>
-
-                                    <label
-                                        htmlFor="project-image-input"
-                                        className={`project-upload-box ${
-                                            errors.image
-                                                ? "upload-error"
-                                                : ""
-                                        }`}
-                                    >
-
-                                        {preview ? (
-                                            <>
-                                                <img
-                                                    src={
-                                                        preview
-                                                    }
-                                                    alt="Project Preview"
-                                                />
-
-                                                <div className="project-upload-overlay">
-                                                    Change Image
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <ImageIcon
-                                                    size={
-                                                        36
-                                                    }
-                                                />
-
-                                                <strong>
-                                                    Click to upload image
-                                                </strong>
-
-                                                <span>
-                                                    JPG, JPEG, PNG or WEBP
-                                                </span>
-
-                                                <span>
-                                                    Maximum 5MB
-                                                </span>
-                                            </>
-                                        )}
-
-                                    </label>
-
-                                    <input
-                                        id="project-image-input"
-                                        type="file"
-                                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                                        onChange={
-                                            handleImageChange
-                                        }
-                                        hidden
-                                    />
-
-                                    {errors.image && (
-                                        <small className="project-form-error">
-                                            {
-                                                errors.image
-                                            }
-                                        </small>
-                                    )}
-
-                                </div>
-
-                                {/* FOOTER */}
-
-                                <div className="project-modal-footer">
-
-                                    <button
-                                        type="button"
-                                        className="project-modal-close"
-                                        onClick={
-                                            closeModal
-                                        }
-                                        disabled={
-                                            saving
-                                        }
-                                    >
-                                        Cancel
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        className="project-modal-save"
-                                        disabled={
-                                            saving
-                                        }
-                                    >
-                                        {saving
-                                            ? "Saving..."
-                                            : modal ===
-                                              "edit"
-                                            ? "Update Project"
-                                            : "Create Project"}
-                                    </button>
-
-                                </div>
-
-                            </form>
-                        )}
+
+                        <div className="project-category-list">
+
+                          {filteredCategoryOptions.length >
+                          0 ? (
+
+                            filteredCategoryOptions.map(
+                              (category) => (
+
+                                <button
+                                  type="button"
+                                  key={category}
+                                  className={
+                                    `project-category-option ${
+                                      editProject.category ===
+                                      category
+                                        ? "selected"
+                                        : ""
+                                    }`
+                                  }
+                                  onClick={() => {
+
+                                    setEditProject({
+                                      ...editProject,
+                                      category:
+                                        category,
+                                    });
+
+                                    setShowCategoryDropdown(
+                                      false
+                                    );
+
+                                  }}
+                                >
+                                  {category}
+                                </button>
+
+                              )
+                            )
+
+                          ) : (
+
+                            <div className="project-category-empty">
+                              No category found
+                            </div>
+
+                          )}
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+
+                  <label>
+                    Location
+                  </label>
+
+                  <input
+                    type="text"
+                    value={
+                      editProject.location ||
+                      ""
+                    }
+                    placeholder="Location"
+                    onChange={(e) =>
+                      setEditProject({
+                        ...editProject,
+                        location:
+                          e.target.value,
+                      })
+                    }
+                  />
+
+
+                  <label>
+                    Year
+                  </label>
+
+                  <input
+                    type="text"
+                    value={
+                      editProject.year ||
+                      ""
+                    }
+                    placeholder="2026"
+                    onChange={(e) =>
+                      setEditProject({
+                        ...editProject,
+                        year:
+                          e.target.value,
+                      })
+                    }
+                  />
+
+
+                  <label>
+                    Description
+                  </label>
+
+                  <textarea
+                    rows="4"
+                    value={
+                      editProject.description ||
+                      ""
+                    }
+                    placeholder="Project details..."
+                    onChange={(e) =>
+                      setEditProject({
+                        ...editProject,
+                        description:
+                          e.target.value,
+                      })
+                    }
+                  />
+
+
+                  <label>
+                    Cover Image
+                  </label>
+
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={
+                      handleEditImage
+                    }
+                  />
+
+
+                  {editImagePreview && (
+
+                    <div className="project-preview-wrapper">
+
+                      <img
+                        src={
+                          editImagePreview
+                        }
+                        alt="Project Preview"
+                        className="project-image-preview"
+                      />
+
+                      <span>
+                        Current / selected image
+                      </span>
 
                     </div>
 
-                </div>
-            )}
+                  )}
 
-        </AdminLayout>
-    );
+                </div>
+
+              </div>
+
+
+              <div className="modal-actions">
+
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-secondary"
+                  onClick={() =>
+                    setShowEditModal(
+                      false
+                    )
+                  }
+                >
+                  Cancel
+                </button>
+
+
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-save"
+                  onClick={
+                    updateProject
+                  }
+                >
+
+                  <Pencil
+                    size={15}
+                  />
+
+                  <span>
+                    Save Changes
+                  </span>
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+
+        {/* ==========================================
+            ADD PROJECT MODAL
+        ========================================== */}
+
+        {showAddModal && (
+
+          <div
+            className="modal-overlay"
+            onClick={() =>
+              setShowAddModal(
+                false
+              )
+            }
+          >
+
+            <div
+              className="product-modal project-add-modal"
+              onClick={(e) =>
+                e.stopPropagation()
+              }
+            >
+
+
+              <div className="modal-header">
+
+                <div>
+
+                  <span className="project-modal-eyebrow">
+                    PROJECT
+                  </span>
+
+                  <h2>
+                    Add Project
+                  </h2>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="close-btn"
+                  onClick={() =>
+                    setShowAddModal(
+                      false
+                    )
+                  }
+                >
+                  ✕
+                </button>
+
+              </div>
+
+
+              <div className="modal-body">
+
+                <div className="edit-form">
+
+
+                  {/* TITLE */}
+
+                  <label>
+                    Project Title *
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder="Project Title"
+                    value={
+                      newProject.title
+                    }
+                    className={
+                      validationErrors.title
+                        ? "project-input-error"
+                        : ""
+                    }
+                    onChange={(e) => {
+
+                      setNewProject({
+                        ...newProject,
+                        title:
+                          e.target.value,
+                      });
+
+                      setValidationErrors(
+                        (prev) => ({
+                          ...prev,
+                          title: "",
+                        })
+                      );
+
+                    }}
+                  />
+
+                  {validationErrors.title && (
+
+                    <span className="project-validation-message">
+                      {
+                        validationErrors.title
+                      }
+                    </span>
+
+                  )}
+
+
+                  {/* CATEGORY */}
+
+                  <label>
+                    Category *
+                  </label>
+
+                  <div
+                    className="project-category-picker"
+                    ref={
+                      categoryRef
+                    }
+                  >
+
+                    <button
+                      type="button"
+                      className={
+                        `project-category-trigger ${
+                          validationErrors.category
+                            ? "project-input-error"
+                            : ""
+                        }`
+                      }
+                      onClick={() => {
+
+                        setShowCategoryDropdown(
+                          !showCategoryDropdown
+                        );
+
+                        setCategorySearch(
+                          ""
+                        );
+
+                      }}
+                    >
+
+                      <span
+                        className={
+                          newProject.category
+                            ? "selected-category"
+                            : "category-placeholder"
+                        }
+                      >
+                        {
+                          newProject.category ||
+                          "Select Category"
+                        }
+                      </span>
+
+
+                      <ChevronDown
+                        size={17}
+                      />
+
+                    </button>
+
+
+                    {showCategoryDropdown && (
+
+                      <div className="project-category-dropdown">
+
+                        <div className="project-category-search">
+
+                          <Search
+                            size={16}
+                          />
+
+                          <input
+                            type="text"
+                            placeholder="Search category..."
+                            value={
+                              categorySearch
+                            }
+                            onChange={(e) =>
+                              setCategorySearch(
+                                e.target.value
+                              )
+                            }
+                            autoFocus
+                          />
+
+                        </div>
+
+
+                        <div className="project-category-list">
+
+                          {filteredCategoryOptions.length >
+                          0 ? (
+
+                            filteredCategoryOptions.map(
+                              (category) => (
+
+                                <button
+                                  type="button"
+                                  key={category}
+                                  className={
+                                    `project-category-option ${
+                                      newProject.category ===
+                                      category
+                                        ? "selected"
+                                        : ""
+                                    }`
+                                  }
+                                  onClick={() => {
+
+                                    setNewProject({
+                                      ...newProject,
+                                      category:
+                                        category,
+                                    });
+
+                                    setShowCategoryDropdown(
+                                      false
+                                    );
+
+                                    setValidationErrors(
+                                      (prev) => ({
+                                        ...prev,
+                                        category:
+                                          "",
+                                      })
+                                    );
+
+                                  }}
+                                >
+
+                                  {category}
+
+                                </button>
+
+                              )
+                            )
+
+                          ) : (
+
+                            <div className="project-category-empty">
+                              No category found
+                            </div>
+
+                          )}
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+
+                  {validationErrors.category && (
+
+                    <span className="project-validation-message">
+                      {
+                        validationErrors.category
+                      }
+                    </span>
+
+                  )}
+
+
+                  {/* LOCATION */}
+
+                  <label>
+                    Location *
+                  </label>
+
+                  <div
+                    className="project-category-picker"
+                    ref={
+                      locationRef
+                    }
+                  >
+
+                    <button
+                      type="button"
+                      className={
+                        `project-category-trigger ${
+                          validationErrors.location
+                            ? "project-input-error"
+                            : ""
+                        }`
+                      }
+                      onClick={() => {
+
+                        setShowLocationDropdown(
+                          !showLocationDropdown
+                        );
+
+                        setLocationSearch(
+                          ""
+                        );
+
+                        setShowCategoryDropdown(
+                          false
+                        );
+
+                      }}
+                    >
+
+                      <span
+                        className={
+                          newProject.location
+                            ? "selected-category"
+                            : "category-placeholder"
+                        }
+                      >
+                        {
+                          newProject.location ||
+                          "Select City"
+                        }
+                      </span>
+
+
+                      <MapPin
+                        size={17}
+                      />
+
+                    </button>
+
+
+                    {showLocationDropdown && (
+
+                      <div className="project-category-dropdown">
+
+                        <div className="project-category-search">
+
+                          <Search
+                            size={16}
+                          />
+
+                          <input
+                            type="text"
+                            placeholder="Search Indian city..."
+                            value={
+                              locationSearch
+                            }
+                            onChange={(e) =>
+                              setLocationSearch(
+                                e.target.value
+                              )
+                            }
+                            autoFocus
+                          />
+
+                        </div>
+
+
+                        <div className="project-category-list">
+
+                          {filteredCities.length >
+                          0 ? (
+
+                            filteredCities.map(
+                              (city) => (
+
+                                <button
+                                  type="button"
+                                  key={city}
+                                  className={
+                                    `project-category-option ${
+                                      newProject.location ===
+                                      city
+                                        ? "selected"
+                                        : ""
+                                    }`
+                                  }
+                                  onClick={() => {
+
+                                    setNewProject({
+                                      ...newProject,
+                                      location:
+                                        city,
+                                    });
+
+                                    setShowLocationDropdown(
+                                      false
+                                    );
+
+                                    setLocationSearch(
+                                      ""
+                                    );
+
+                                    setValidationErrors(
+                                      (prev) => ({
+                                        ...prev,
+                                        location:
+                                          "",
+                                      })
+                                    );
+
+                                  }}
+                                >
+
+                                  {city}
+
+                                </button>
+
+                              )
+                            )
+
+                          ) : (
+
+                            <div className="project-category-empty">
+                              No city found
+                            </div>
+
+                          )}
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+
+                  {validationErrors.location && (
+
+                    <span className="project-validation-message">
+                      {
+                        validationErrors.location
+                      }
+                    </span>
+
+                  )}
+
+
+                  {/* YEAR */}
+
+                  <label>
+                    Year *
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder="2026"
+                    value={
+                      newProject.year
+                    }
+                    className={
+                      validationErrors.year
+                        ? "project-input-error"
+                        : ""
+                    }
+                    onChange={(e) => {
+
+                      setNewProject({
+                        ...newProject,
+                        year:
+                          e.target.value,
+                      });
+
+                      setValidationErrors(
+                        (prev) => ({
+                          ...prev,
+                          year: "",
+                        })
+                      );
+
+                    }}
+                  />
+
+                  {validationErrors.year && (
+
+                    <span className="project-validation-message">
+                      {
+                        validationErrors.year
+                      }
+                    </span>
+
+                  )}
+
+
+                  {/* DESCRIPTION */}
+
+                  <label>
+                    Description *
+                  </label>
+
+                  <textarea
+                    rows="4"
+                    placeholder="Project details..."
+                    value={
+                      newProject.description
+                    }
+                    className={
+                      validationErrors.description
+                        ? "project-input-error"
+                        : ""
+                    }
+                    onChange={(e) => {
+
+                      setNewProject({
+                        ...newProject,
+                        description:
+                          e.target.value,
+                      });
+
+                      setValidationErrors(
+                        (prev) => ({
+                          ...prev,
+                          description:
+                            "",
+                        })
+                      );
+
+                    }}
+                  />
+
+                  {validationErrors.description && (
+
+                    <span className="project-validation-message">
+                      {
+                        validationErrors.description
+                      }
+                    </span>
+
+                  )}
+
+
+                  {/* IMAGE */}
+
+                  <label>
+                    Cover Image *
+                  </label>
+
+
+                  <label
+                    htmlFor="project-image-upload"
+                    className={
+                      `project-upload-box ${
+                        validationErrors.image
+                          ? "upload-error"
+                          : ""
+                      }`
+                    }
+                  >
+
+                    <Upload
+                      size={22}
+                    />
+
+                    <span>
+                      Choose Project Image
+                    </span>
+
+                    <small>
+                      JPG, JPEG, PNG or WEBP
+                    </small>
+
+                  </label>
+
+
+                  <input
+                    id="project-image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="project-hidden-file"
+                    onChange={
+                      handleNewImage
+                    }
+                  />
+
+
+                  {validationErrors.image && (
+
+                    <span className="project-validation-message">
+                      {
+                        validationErrors.image
+                      }
+                    </span>
+
+                  )}
+
+
+                  {newImagePreview && (
+
+                    <div className="project-preview-wrapper">
+
+                      <img
+                        src={
+                          newImagePreview
+                        }
+                        alt="Project Preview"
+                        className="project-image-preview"
+                      />
+
+                      <span>
+                        Selected image preview
+                      </span>
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              </div>
+
+
+              <div className="modal-actions">
+
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-secondary"
+                  onClick={() =>
+                    setShowAddModal(
+                      false
+                    )
+                  }
+                >
+                  Cancel
+                </button>
+
+
+                <button
+                  type="button"
+                  className="modal-btn modal-btn-save"
+                  onClick={
+                    addProject
+                  }
+                >
+
+                  <Plus
+                    size={16}
+                  />
+
+                  <span>
+                    Create Project
+                  </span>
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+      </div>
+
+    </AdminLayout>
+
+  );
+
 };
 
 export default Projects;

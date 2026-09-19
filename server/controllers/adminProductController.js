@@ -1,4 +1,5 @@
 const Product = require("../models/Furniture");
+const { applyStockVisibility } = require("../utils/stockVisibility");
 
 // =====================================================
 // GET ALL PRODUCTS
@@ -46,6 +47,7 @@ const addProduct = async (req, res) => {
             dimensions,
             warranty,
             delivery,
+            tags,
         } = req.body;
 
 
@@ -180,6 +182,30 @@ const addProduct = async (req, res) => {
 
 
         // ==========================================
+        // TAGS
+        // ==========================================
+
+        let productTags = [];
+
+        if (tags) {
+
+            if (Array.isArray(tags)) {
+
+                productTags = tags
+                    .map((item) => String(item).trim())
+                    .filter(Boolean);
+
+            } else {
+
+                productTags = String(tags)
+                    .split(",")
+                    .map((item) => item.trim())
+                    .filter(Boolean);
+            }
+        }
+
+
+        // ==========================================
         // CREATE PRODUCT
         // ==========================================
 
@@ -226,6 +252,13 @@ const addProduct = async (req, res) => {
                     : "",
 
             features,
+
+            tags: productTags,
+
+            isVisible: Number(stock) > 0,
+
+            autoHiddenDueToStock:
+                Number(stock) <= 0,
         });
 
 
@@ -353,6 +386,22 @@ const updateProduct = async (req, res) => {
                 String(req.body.delivery).trim();
 
 
+        if (req.body.tags !== undefined) {
+
+            product.tags =
+                Array.isArray(req.body.tags)
+                    ? req.body.tags
+                    : String(req.body.tags).split(",");
+
+            product.tags =
+                product.tags
+                    .map((item) =>
+                        String(item).trim()
+                    )
+                    .filter(Boolean);
+        }
+
+
         if (req.body.features !== undefined) {
 
             product.features =
@@ -378,6 +427,13 @@ const updateProduct = async (req, res) => {
             product.image =
                 req.file.filename;
         }
+
+
+        // ==========================================
+        // AUTO DISABLE / RE-ENABLE ON STOCK CHANGE
+        // ==========================================
+
+        applyStockVisibility(product);
 
 
         await product.save();
@@ -466,6 +522,164 @@ const deleteProduct = async (req, res) => {
 
 
 // =====================================================
+// TOGGLE PRODUCT VISIBILITY
+// =====================================================
+
+const toggleProductVisibility = async (req, res) => {
+
+    try {
+
+        const product =
+            await Product.findById(req.params.id);
+
+
+        if (!product) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Product not found",
+            });
+        }
+
+
+        const turningOn = !product.isVisible;
+
+        // Can't enable a product with 0 stock without restocking
+        // it first — ask the admin for a quantity instead of
+        // silently showing an out-of-stock item on the website.
+        if (turningOn && product.stock <= 0) {
+
+            const restockQty = Number(req.body.stock);
+
+            if (!Number.isFinite(restockQty) || restockQty <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "This product is out of stock. Please enter a stock quantity to enable it.",
+                    requiresStock: true,
+                });
+            }
+
+            product.stock = restockQty;
+        }
+
+        product.isVisible = turningOn;
+
+        // A manual toggle always overrides the
+        // automatic stock-based hide.
+        product.autoHiddenDueToStock = false;
+
+        // Re-apply auto-hide in case the product is being turned
+        // off, or was left at 0 stock some other way.
+        applyStockVisibility(product);
+
+        await product.save();
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message: product.isVisible
+                ? "Product is now visible on the website"
+                : "Product is now hidden from the website",
+
+            product,
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "TOGGLE PRODUCT VISIBILITY ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Failed to update visibility",
+        });
+    }
+};
+
+
+// =====================================================
+// GET ALL PRODUCT CATEGORIES FROM DATABASE
+// =====================================================
+
+const getProductCategories = async (req, res) => {
+    try {
+        const productCategories = await Product.distinct("category");
+        let pcDocs = [];
+        try {
+            const ProjectCategory = require("../models/ProjectCategory");
+            pcDocs = await ProjectCategory.find({}, "name label");
+        } catch (e) {
+            // Ignore
+        }
+
+        // Map each project category's slug (name) to its
+        // human-readable label, so a legacy product still
+        // using the old slug value (e.g. "Living") resolves
+        // to the same canonical label as the project category
+        // ("Living Room") instead of appearing as a duplicate.
+        const labelByName = new Map();
+        pcDocs.forEach((p) => {
+            if (p.name && p.label) {
+                labelByName.set(
+                    p.name.trim().toLowerCase(),
+                    p.label.trim()
+                );
+            }
+        });
+
+        const combinedSet = new Set();
+
+        (productCategories || []).forEach((c) => {
+            if (!c || typeof c !== "string" || !c.trim()) return;
+
+            const trimmed = c.trim();
+            const canonical =
+                labelByName.get(trimmed.toLowerCase()) ||
+                trimmed;
+
+            combinedSet.add(canonical);
+        });
+
+        pcDocs.forEach((p) => {
+            const label = (p.label || p.name || "").trim();
+            if (label) combinedSet.add(label);
+        });
+
+        // Common default fallback categories if database is empty
+        if (combinedSet.size === 0) {
+            ["Living", "Bedroom", "Dining", "Office", "Kitchen", "Decor", "Outdoor", "Lighting", "Storage"].forEach((c) => combinedSet.add(c));
+        }
+
+        const categories = Array.from(combinedSet).sort((a, b) => a.localeCompare(b));
+
+        return res.status(200).json({
+            success: true,
+            count: categories.length,
+            categories,
+        });
+    } catch (error) {
+        console.error("GET PRODUCT CATEGORIES ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch product categories",
+        });
+    }
+};
+
+
+// =====================================================
 // EXPORT
 // =====================================================
 
@@ -478,5 +692,9 @@ module.exports = {
     updateProduct,
 
     deleteProduct,
+
+    toggleProductVisibility,
+
+    getProductCategories,
 
 };

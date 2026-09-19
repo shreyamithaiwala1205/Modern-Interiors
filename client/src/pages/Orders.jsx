@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-import imageMap from "../utils/imageMap";
+import ProductImage from "../components/ProductImage";
 import SkeletonOrder from "../components/SkeletonOrder";
 
 import "../css/Orders.css";
@@ -120,7 +120,15 @@ function Orders() {
                     {order.payment?.status}
                   </span>
 
-                  <span className="delivery-status">
+                  <span
+                    className={`delivery-status ${
+                      order.status === "Cancelled"
+                        ? "cancelled"
+                        : order.status === "Delivered"
+                        ? "delivered"
+                        : ""
+                    }`}
+                  >
                     Order :
                     {" "}
                     {order.status}
@@ -139,13 +147,18 @@ function Orders() {
                   key={item._id}
                 >
 
-                  <img
-                    src={imageMap[item.furniture.image]}
-                    alt={item.furniture.name}
+                  <ProductImage
+                    image={item.image || item.furniture?.image}
+                    alt={item.name || item.furniture?.name || "Product"}
+                    unavailable={
+                      !item.image && !item.furniture?.image
+                    }
                   />
 
                   <div className="order-info">
-                    <h4>{item.furniture.name}</h4>
+                    <h4>
+                      {item.name || item.furniture?.name || "Product Unavailable"}
+                    </h4>
 
                     <p>
                       Qty : {item.quantity}
@@ -155,7 +168,7 @@ function Orders() {
                       ₹
                       {item.price
                         ? item.price.toLocaleString()
-                        : item.furniture.priceValue.toLocaleString()}
+                        : (item.furniture?.priceValue || 0).toLocaleString()}
                     </p>
                   </div>
 
@@ -219,90 +232,91 @@ function Orders() {
 
               </div>
 
-              {/* Timeline */}
+              {/* Tracking */}
 
-              <div className="timeline">
+              {order.status === "Cancelled" ? (
 
-                <div className={`step active`}>
-                  <div className="circle">✓</div>
-                  <p>Order Placed</p>
+                <div className="order-cancelled-banner">
+                  ✕ This order was cancelled.
                 </div>
 
-                <div className={`line active`}></div>
+              ) : (
 
-                <div
-                  className={`step ${
-                    order.payment?.status === "Paid"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="circle">✓</div>
-                  <p>Payment</p>
-                </div>
+                (() => {
 
-                <div
-                  className={`line ${
-                    order.status !== "Pending"
-                      ? "active"
-                      : ""
-                  }`}
-                ></div>
+                  const stages = [
+                    "Order Placed",
+                    "Confirmed",
+                    "Out for Delivery",
+                    "Delivered",
+                  ];
 
-                <div
-                  className={`step ${
-                    order.status === "Processing" ||
-                    order.status === "Shipped" ||
-                    order.status === "Delivered"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="circle">✓</div>
-                  <p>Processing</p>
-                </div>
+                  const stageIndex = (() => {
 
-                <div
-                  className={`line ${
-                    order.status === "Shipped" ||
-                    order.status === "Delivered"
-                      ? "active"
-                      : ""
-                  }`}
-                ></div>
+                    switch (order.status) {
 
-                <div
-                  className={`step ${
-                    order.status === "Shipped" ||
-                    order.status === "Delivered"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="circle">✓</div>
-                  <p>Shipped</p>
-                </div>
+                      case "Confirmed":
+                      case "Processing":
+                        return 1;
 
-                <div
-                  className={`line ${
-                    order.status === "Delivered"
-                      ? "active"
-                      : ""
-                  }`}
-                ></div>
+                      case "Shipped":
+                      case "Out for Delivery":
+                        return 2;
 
-                <div
-                  className={`step ${
-                    order.status === "Delivered"
-                      ? "active"
-                      : ""
-                  }`}
-                >
-                  <div className="circle">✓</div>
-                  <p>Delivered</p>
-                </div>
+                      case "Delivered":
+                        return 3;
 
-              </div>
+                      default:
+                        return 0;
+
+                    }
+
+                  })();
+
+                  return (
+
+                    <div className="timeline">
+
+                      {stages.map((label, index) => (
+
+                        <React.Fragment key={label}>
+
+                          <div
+                            className={`step ${
+                              index <= stageIndex
+                                ? "active"
+                                : ""
+                            }`}
+                          >
+                            <div className="circle">
+                              {index <= stageIndex
+                                ? "✓"
+                                : index + 1}
+                            </div>
+                            <p>{label}</p>
+                          </div>
+
+                          {index < stages.length - 1 && (
+                            <div
+                              className={`line ${
+                                index < stageIndex
+                                  ? "active"
+                                  : ""
+                              }`}
+                            ></div>
+                          )}
+
+                        </React.Fragment>
+
+                      ))}
+
+                    </div>
+
+                  );
+
+                })()
+
+              )}
 
               {/* Footer */}
 

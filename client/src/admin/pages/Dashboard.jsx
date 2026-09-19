@@ -11,6 +11,7 @@ import RevenueChart from "../components/RevenueChart";
 import QuickActions from "../components/QuickActions";
 import LatestActivity from "../components/LatestActivity";
 import LowStockProducts from "../components/LowStockProducts";
+import OutOfStockProducts from "../components/OutOfStockProducts";
 import "../css/Dashboard.css";
 
 const Dashboard = () => {
@@ -75,7 +76,23 @@ const Dashboard = () => {
 
       <AdminLayout>
 
-        <h2>Loading Dashboard...</h2>
+        <div className="dashboard">
+
+          <div className="dashboard-loading-screen">
+
+            <div className="dashboard-loader"></div>
+
+            <h2>
+              Loading Dashboard...
+            </h2>
+
+            <p>
+              Please wait while dashboard data is loading.
+            </p>
+
+          </div>
+
+        </div>
 
       </AdminLayout>
 
@@ -114,7 +131,7 @@ const Dashboard = () => {
         <div className="dashboard-card">
 
             <div className="card-icon users-icon">
-            <FaUsers size={32} />
+            <FaUsers size={26} />
             </div>
 
             <div>
@@ -130,7 +147,7 @@ const Dashboard = () => {
         <div className="dashboard-card">
 
             <div className="card-icon products-icon">
-            <FaCouch size={32} />
+            <FaCouch size={26} />
             </div>
 
             <div>
@@ -146,7 +163,7 @@ const Dashboard = () => {
         <div className="dashboard-card">
 
             <div className="card-icon orders-icon">
-            <FaShoppingBag size={32} />
+            <FaShoppingBag size={26} />
             </div>
 
             <div>
@@ -162,7 +179,7 @@ const Dashboard = () => {
         <div className="dashboard-card">
 
             <div className="card-icon revenue-icon">
-            <FaRupeeSign size={32} />
+            <FaRupeeSign size={26} />
             </div>
 
             <div>
@@ -184,6 +201,8 @@ const Dashboard = () => {
         <RevenueChart />
 
         <LowStockProducts dashboard={dashboard} />
+
+        <OutOfStockProducts dashboard={dashboard} />
 
         <LatestActivity dashboard={dashboard} />
 

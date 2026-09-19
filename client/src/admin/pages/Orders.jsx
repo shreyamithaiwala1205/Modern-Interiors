@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import axios from "axios";
 
 import {
@@ -11,11 +11,12 @@ import {
     Truck,
     XCircle,
     RefreshCw,
+    Download,
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
 
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 import AdminLayout from "../AdminLayout";
 import "../css/Orders.css";
@@ -153,6 +154,7 @@ const Orders = () => {
 
         setSelectedOrder(order);
         setShowModal(true);
+        setShowAdvancedStatus(false);
     };
 
     // =====================================================
@@ -428,6 +430,76 @@ const Orders = () => {
     };
 
     // =====================================================
+    // EXPORT ORDERS TO CSV
+    // =====================================================
+
+    const exportOrdersToCSV = () => {
+        if (filteredOrders.length === 0) {
+            toast.error("No orders available to export.");
+            return;
+        }
+
+        const headers = [
+            "Order Number",
+            "Customer Name",
+            "Customer Email",
+            "Items",
+            "Amount",
+            "Payment Status",
+            "Order Status",
+            "Order Date",
+        ];
+
+        const rows = filteredOrders.map((order) => [
+            order.orderNumber || "N/A",
+            order.user?.name || "Guest User",
+            order.user?.email || "-",
+            order.totalItems || order.items?.length || 0,
+            Number(order.totalPrice || 0),
+            order.payment?.status || "Pending",
+            order.status || "Pending",
+            formatDate(order.createdAt),
+        ]);
+
+        const csvContent = [
+            headers,
+            ...rows,
+        ]
+            .map((row) =>
+                row
+                    .map((value) => {
+                        const text = String(value ?? "");
+                        return `"${text.replace(/"/g, '""')}"`;
+                    })
+                    .join(",")
+            )
+            .join("\n");
+
+        const blob = new Blob(
+            [csvContent],
+            {
+                type: "text/csv;charset=utf-8;",
+            }
+        );
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Modern-Interiors-Orders-${new Date()
+            .toISOString()
+            .split("T")[0]}.csv`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+        toast.success("Orders exported successfully!");
+    };
+
+    // =====================================================
     // STATUS CLASS
     // =====================================================
 
@@ -436,6 +508,68 @@ const Orders = () => {
             .toLowerCase()
             .replace(/\s+/g, "-");
     };
+
+    // =====================================================
+    // ORDER TRACKING FLOW
+    // =====================================================
+
+    const trackerStages = [
+        { key: "Pending", label: "Order Placed" },
+        { key: "Confirmed", label: "Confirmed" },
+        {
+            key: "Out for Delivery",
+            label: "Out for Delivery",
+        },
+        { key: "Delivered", label: "Delivered" },
+    ];
+
+    // Statuses no longer used going forward, but mapped
+    // to the closest visible stage so older orders still
+    // render a sensible tracker.
+    const trackerStageIndex = (status) => {
+        switch (status) {
+            case "Pending":
+                return 0;
+
+            case "Confirmed":
+            case "Processing":
+                return 1;
+
+            case "Shipped":
+            case "Out for Delivery":
+                return 2;
+
+            case "Delivered":
+                return 3;
+
+            default:
+                return 0;
+        }
+    };
+
+    // Next status in the guided flow, based on where the
+    // order currently sits.
+    const nextStatusFor = (status) => {
+        switch (status) {
+            case "Pending":
+                return "Confirmed";
+
+            case "Confirmed":
+            case "Processing":
+                return "Out for Delivery";
+
+            case "Shipped":
+            case "Out for Delivery":
+                return "Delivered";
+
+            default:
+                return null;
+        }
+    };
+
+    const [showAdvancedStatus, setShowAdvancedStatus] =
+        useState(false);
+
 
     // =====================================================
     // STATUS ICON
@@ -480,20 +614,31 @@ const Orders = () => {
     // =====================================================
 
     if (loading) {
-        return (
-            <AdminLayout>
-                <div className="orders-loading">
-                    <RefreshCw
-                        size={35}
-                        className="loading-icon"
-                    />
 
-                    <h2>
-                        Loading Orders...
-                    </h2>
-                </div>
-            </AdminLayout>
-        );
+    return (
+        <AdminLayout>
+
+        <div className="products-page">
+
+            <div className="products-loading-screen">
+
+            <div className="products-loader"></div>
+
+            <h2>
+                Loading Orders...
+            </h2>
+
+            <p>
+                Please wait while order data is loading.
+            </p>
+
+            </div>
+
+        </div>
+
+        </AdminLayout>
+    );
+
     }
 
     // =====================================================
@@ -554,78 +699,68 @@ const Orders = () => {
 
                 </div>
 
+{/* =================================================
+    STATS
+================================================= */}
 
-                {/* =================================================
-                    STATS
-                ================================================== */}
+<div className="orders-stats-grid">
 
-                <div className="orders-stats-grid">
+    <div className="order-stat-card">
 
-                    <div className="order-stat-card">
+        <div className="order-stat-icon total">
+            <Package size={22} />
+        </div>
 
-                        <div className="order-stat-icon total">
-                            <Package size={22} />
-                        </div>
+        <div>
+            <p>Total Orders</p>
+            <h3>{totalOrders}</h3>
+        </div>
 
-                        <div>
-                            <p>Total Orders</p>
-                            <h3>
-                                {totalOrders}
-                            </h3>
-                        </div>
-
-                    </div>
+    </div>
 
 
-                    <div className="order-stat-card">
+    <div className="order-stat-card">
 
-                        <div className="order-stat-icon pending">
-                            <Clock size={22} />
-                        </div>
+        <div className="order-stat-icon pending">
+            <Clock size={22} />
+        </div>
 
-                        <div>
-                            <p>Pending</p>
-                            <h3>
-                                {pendingOrders}
-                            </h3>
-                        </div>
+        <div>
+            <p>Pending</p>
+            <h3>{pendingOrders}</h3>
+        </div>
 
-                    </div>
+    </div>
 
 
-                    <div className="order-stat-card">
+    <div className="order-stat-card">
 
-                        <div className="order-stat-icon processing">
-                            <Truck size={22} />
-                        </div>
+        <div className="order-stat-icon processing">
+            <Truck size={22} />
+        </div>
 
-                        <div>
-                            <p>Processing</p>
-                            <h3>
-                                {processingOrders}
-                            </h3>
-                        </div>
+        <div>
+            <p>Processing</p>
+            <h3>{processingOrders}</h3>
+        </div>
 
-                    </div>
+    </div>
 
 
-                    <div className="order-stat-card">
+    <div className="order-stat-card">
 
-                        <div className="order-stat-icon delivered">
-                            <CheckCircle size={22} />
-                        </div>
+        <div className="order-stat-icon delivered">
+            <CheckCircle size={22} />
+        </div>
 
-                        <div>
-                            <p>Delivered</p>
-                            <h3>
-                                {deliveredOrders}
-                            </h3>
-                        </div>
+        <div>
+            <p>Delivered</p>
+            <h3>{deliveredOrders}</h3>
+        </div>
 
-                    </div>
+    </div>
 
-                </div>
-
+</div>
 
                 {/* =================================================
                     REVENUE
@@ -655,100 +790,120 @@ const Orders = () => {
 
                 </div>
 
-
                 {/* =================================================
                     TOOLBAR
                 ================================================== */}
 
                 <div className="orders-toolbar">
 
-                    <div className="orders-search">
+                    {/* LEFT SIDE */}
+                    <div className="orders-toolbar-left">
+                    
+<div className="orders-count">
+    <h3>Total Orders : </h3>
 
-                        <Search size={18} />
+    <span>
+        {filteredOrders.length}
+    </span>
+</div>
 
-                        <input
-                            type="text"
-                            placeholder="Search order number, name or email..."
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(
-                                    e.target.value
-                                )
-                            }
-                        />
+                        <button
+                            type="button"
+                            className="export-btn"
+                            onClick={exportOrdersToCSV}
+                        >
+                            <Download size={17} />
+                            Export CSV
+                        </button>
 
                     </div>
 
 
-                    <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                            setStatusFilter(
-                                e.target.value
-                            )
-                        }
-                    >
-                        <option value="all">
-                            All Status
-                        </option>
+                    {/* RIGHT SIDE */}
+                    <div className="orders-toolbar-right">
 
-                        <option value="Pending">
-                            Pending
-                        </option>
+                        <div className="orders-search">
 
-                        <option value="Confirmed">
-                            Confirmed
-                        </option>
+                            <Search size={18} />
 
-                        <option value="Processing">
-                            Processing
-                        </option>
+                            <input
+                                type="text"
+                                placeholder="Search order number, name or email..."
+                                value={search}
+                                onChange={(e) =>
+                                    setSearch(e.target.value)
+                                }
+                            />
 
-                        <option value="Shipped">
-                            Shipped
-                        </option>
-
-                        <option value="Out for Delivery">
-                            Out for Delivery
-                        </option>
-
-                        <option value="Delivered">
-                            Delivered
-                        </option>
-
-                        <option value="Cancelled">
-                            Cancelled
-                        </option>
-                    </select>
+                        </div>
 
 
-                    <select
-                        value={sortBy}
-                        onChange={(e) =>
-                            setSortBy(
-                                e.target.value
-                            )
-                        }
-                    >
-                        <option value="newest">
-                            Newest First
-                        </option>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) =>
+                                setStatusFilter(e.target.value)
+                            }
+                        >
+                            <option value="all">
+                                All Status
+                            </option>
 
-                        <option value="oldest">
-                            Oldest First
-                        </option>
+                            <option value="Pending">
+                                Pending
+                            </option>
 
-                        <option value="high">
-                            Highest Amount
-                        </option>
+                            <option value="Confirmed">
+                                Confirmed
+                            </option>
 
-                        <option value="low">
-                            Lowest Amount
-                        </option>
-                    </select>
+                            <option value="Processing">
+                                Processing
+                            </option>
+
+                            <option value="Shipped">
+                                Shipped
+                            </option>
+
+                            <option value="Out for Delivery">
+                                Out for Delivery
+                            </option>
+
+                            <option value="Delivered">
+                                Delivered
+                            </option>
+
+                            <option value="Cancelled">
+                                Cancelled
+                            </option>
+                        </select>
+
+
+                        <select
+                            value={sortBy}
+                            onChange={(e) =>
+                                setSortBy(e.target.value)
+                            }
+                        >
+                            <option value="newest">
+                                Newest First
+                            </option>
+
+                            <option value="oldest">
+                                Oldest First
+                            </option>
+
+                            <option value="high">
+                                Highest Amount
+                            </option>
+
+                            <option value="low">
+                                Lowest Amount
+                            </option>
+                        </select>
+
+                    </div>
 
                 </div>
-
 
                 {/* =================================================
                     TABLE
@@ -982,125 +1137,41 @@ const Orders = () => {
 
                 </div>
 
+                {/* PAGINATION */}
 
-                {/* =================================================
-                    PAGINATION
-                ================================================== */}
+                <div className="pagination">
+                <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                >
+                    ‹
+                </button>
 
-                {filteredOrders.length > 0 && (
-                    <div className="orders-pagination">
+                {Array.from({ length: totalPages }, (_, index) => (
+                    <button
+                    type="button"
+                    key={index}
+                    className={
+                        currentPage === index + 1
+                        ? "active-page"
+                        : ""
+                    }
+                    onClick={() => setCurrentPage(index + 1)}
+                    >
+                    {index + 1}
+                    </button>
+                ))}
 
-                        <div className="pagination-info">
-
-                            Showing{" "}
-
-                            <strong>
-                                {indexOfFirstOrder + 1}
-                            </strong>
-
-                            {" - "}
-
-                            <strong>
-                                {Math.min(
-                                    indexOfLastOrder,
-                                    filteredOrders.length
-                                )}
-                            </strong>
-
-                            {" of "}
-
-                            <strong>
-                                {filteredOrders.length}
-                            </strong>
-
-                            {" orders"}
-
-                        </div>
-
-
-                        <div className="pagination-buttons">
-
-                            {/* PREVIOUS */}
-
-                            <button
-                                type="button"
-                                disabled={
-                                    safeCurrentPage ===
-                                    1
-                                }
-                                onClick={() => {
-                                    setCurrentPage(
-                                        (page) =>
-                                            Math.max(
-                                                1,
-                                                page - 1
-                                            )
-                                    );
-                                }}
-                            >
-                                <ChevronLeft size={18} />
-                                Previous
-                            </button>
-
-
-                            {/* PAGE NUMBERS */}
-
-                            {Array.from(
-                                {
-                                    length: totalPages,
-                                },
-                                (_, index) => (
-                                    <button
-                                        type="button"
-                                        key={index}
-                                        className={
-                                            safeCurrentPage ===
-                                            index + 1
-                                                ? "active-page"
-                                                : ""
-                                        }
-                                        onClick={() => {
-                                            setCurrentPage(
-                                                index + 1
-                                            );
-                                        }}
-                                    >
-                                        {index + 1}
-                                    </button>
-                                )
-                            )}
-
-
-                            {/* NEXT */}
-
-                            <button
-                                type="button"
-                                disabled={
-                                    safeCurrentPage ===
-                                    totalPages
-                                }
-                                onClick={() => {
-                                    setCurrentPage(
-                                        (page) =>
-                                            Math.min(
-                                                totalPages,
-                                                page + 1
-                                            )
-                                    );
-                                }}
-                            >
-                                Next
-                                <ChevronRight
-                                    size={18}
-                                />
-                            </button>
-
-                        </div>
-
-                    </div>
-                )}
-
-
+                <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                >
+                    ›
+                </button>
+                </div>
+            
             </div>
 
 
@@ -1479,60 +1550,256 @@ const Orders = () => {
                             </div>
 
 
-                            {/* STATUS UPDATE */}
+                            {/* ORDER TRACKING */}
 
                             <div className="detail-section">
 
                                 <h3>
-                                    Update Order Status
+                                    Order Tracking
                                 </h3>
 
-                                <div className="status-update-box">
+                                {selectedOrder.status ===
+                                "Cancelled" ? (
 
-                                    <select
-                                        value={
-                                            selectedOrder.status ||
-                                            "Pending"
-                                        }
-                                        onChange={(e) =>
-                                            updateStatus(
-                                                selectedOrder._id,
-                                                e.target.value
-                                            )
-                                        }
-                                    >
+                                    <div className="order-tracker-cancelled">
+                                        <XCircle size={18} />
+                                        This order has been
+                                        cancelled.
+                                    </div>
 
-                                        <option value="Pending">
-                                            Pending
-                                        </option>
+                                ) : (
 
-                                        <option value="Confirmed">
-                                            Confirmed
-                                        </option>
+                                    <div className="order-tracker">
 
-                                        <option value="Processing">
-                                            Processing
-                                        </option>
+                                        {trackerStages.map(
+                                            (
+                                                stage,
+                                                index
+                                            ) => {
 
-                                        <option value="Shipped">
-                                            Shipped
-                                        </option>
+                                                const currentIndex =
+                                                    trackerStageIndex(
+                                                        selectedOrder.status
+                                                    );
 
-                                        <option value="Out for Delivery">
-                                            Out for Delivery
-                                        </option>
+                                                const isDone =
+                                                    index <
+                                                    currentIndex;
 
-                                        <option value="Delivered">
-                                            Delivered
-                                        </option>
+                                                const isCurrent =
+                                                    index ===
+                                                    currentIndex;
 
-                                        <option value="Cancelled">
-                                            Cancelled
-                                        </option>
+                                                return (
+                                                    <Fragment
+                                                        key={
+                                                            stage.key
+                                                        }
+                                                    >
 
-                                    </select>
+                                                        <div
+                                                            className={
+                                                                `order-tracker-step ${
+                                                                    isDone
+                                                                        ? "done"
+                                                                        : ""
+                                                                } ${
+                                                                    isCurrent
+                                                                        ? "current"
+                                                                        : ""
+                                                                }`
+                                                            }
+                                                        >
 
-                                </div>
+                                                            <div className="order-tracker-dot">
+                                                                {isDone ||
+                                                                isCurrent
+                                                                    ? "✓"
+                                                                    : index +
+                                                                      1}
+                                                            </div>
+
+                                                            <span className="order-tracker-label">
+                                                                {
+                                                                    stage.label
+                                                                }
+                                                            </span>
+
+                                                        </div>
+
+
+                                                        {index <
+                                                            trackerStages.length -
+                                                                1 && (
+
+                                                            <div
+                                                                className={
+                                                                    `order-tracker-line ${
+                                                                        index <
+                                                                        currentIndex
+                                                                            ? "done"
+                                                                            : ""
+                                                                    }`
+                                                                }
+                                                            />
+
+                                                        )}
+
+                                                    </Fragment>
+                                                );
+
+                                            }
+                                        )}
+
+                                    </div>
+
+                                )}
+
+
+                                {/* PRIMARY ACTIONS */}
+
+                                {selectedOrder.status ===
+                                    "Delivered" && (
+
+                                    <div className="order-final-note">
+                                        <CheckCircle size={18} />
+                                        Delivered on{" "}
+                                        {formatDate(
+                                            selectedOrder.deliveredAt
+                                        )}
+                                    </div>
+
+                                )}
+
+                                {selectedOrder.status !==
+                                    "Delivered" &&
+                                    selectedOrder.status !==
+                                        "Cancelled" && (
+
+                                    <div className="status-action-row">
+
+                                        {nextStatusFor(
+                                            selectedOrder.status
+                                        ) && (
+
+                                            <button
+                                                type="button"
+                                                className="status-action-btn primary"
+                                                onClick={() =>
+                                                    updateStatus(
+                                                        selectedOrder._id,
+                                                        nextStatusFor(
+                                                            selectedOrder.status
+                                                        )
+                                                    )
+                                                }
+                                            >
+                                                <CheckCircle size={16} />
+                                                Mark as{" "}
+                                                {nextStatusFor(
+                                                    selectedOrder.status
+                                                )}
+                                            </button>
+
+                                        )}
+
+
+                                        <button
+                                            type="button"
+                                            className="status-action-btn danger"
+                                            onClick={() => {
+
+                                                if (
+                                                    window.confirm(
+                                                        "Cancel this order?"
+                                                    )
+                                                ) {
+
+                                                    updateStatus(
+                                                        selectedOrder._id,
+                                                        "Cancelled"
+                                                    );
+
+                                                }
+
+                                            }}
+                                        >
+                                            <XCircle size={16} />
+                                            Cancel Order
+                                        </button>
+
+                                    </div>
+
+                                )}
+
+
+                                {/* ADVANCED OVERRIDE */}
+
+                                <button
+                                    type="button"
+                                    className="status-advanced-toggle"
+                                    onClick={() =>
+                                        setShowAdvancedStatus(
+                                            (value) => !value
+                                        )
+                                    }
+                                >
+                                    {showAdvancedStatus
+                                        ? "Hide advanced status options"
+                                        : "Set a custom status manually"}
+                                </button>
+
+
+                                {showAdvancedStatus && (
+
+                                    <div className="status-update-box">
+
+                                        <select
+                                            value={
+                                                selectedOrder.status ||
+                                                "Pending"
+                                            }
+                                            onChange={(e) =>
+                                                updateStatus(
+                                                    selectedOrder._id,
+                                                    e.target.value
+                                                )
+                                            }
+                                        >
+
+                                            <option value="Pending">
+                                                Pending
+                                            </option>
+
+                                            <option value="Confirmed">
+                                                Confirmed
+                                            </option>
+
+                                            <option value="Processing">
+                                                Processing
+                                            </option>
+
+                                            <option value="Shipped">
+                                                Shipped
+                                            </option>
+
+                                            <option value="Out for Delivery">
+                                                Out for Delivery
+                                            </option>
+
+                                            <option value="Delivered">
+                                                Delivered
+                                            </option>
+
+                                            <option value="Cancelled">
+                                                Cancelled
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+                                )}
 
                             </div>
 

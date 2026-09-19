@@ -1,0 +1,236 @@
+.reviews-admin-page {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.reviews-admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.reviews-admin-header h1 {
+    margin: 0 0 6px;
+    color: #ffffff;
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.reviews-admin-header p {
+    margin: 0;
+    color: #909090;
+    font-size: 14px;
+}
+
+.refresh-reviews-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    height: 40px;
+    padding: 0 16px;
+
+    border: 1px solid #3a3a3a;
+    border-radius: 9px;
+
+    background: #1b1b1b;
+    color: #dddddd;
+
+    font-size: 13.5px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.refresh-reviews-btn:hover {
+    background: #d4af37;
+    border-color: #d4af37;
+    color: #111111;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 16px rgba(212, 175, 55, 0.3);
+}
+
+/* =====================================================
+   TOOLBAR
+===================================================== */
+
+.reviews-admin-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.reviews-search {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 0 14px;
+    height: 42px;
+
+    background: #1b1b1b;
+    border: 1px solid #3a3a3a;
+    border-radius: 9px;
+    color: #999;
+}
+
+.reviews-search input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 14px;
+}
+
+.reviews-admin-toolbar select {
+    height: 42px;
+    padding: 0 12px;
+    background: #1b1b1b;
+    border: 1px solid #3a3a3a;
+    border-radius: 9px;
+    color: #ddd;
+    font-size: 13.5px;
+}
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.reviews-admin-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #2b2b2b;
+    border-radius: 12px;
+}
+
+.reviews-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.reviews-admin-table thead {
+    background: #1b1b1b;
+}
+
+.reviews-admin-table th {
+    text-align: left;
+    padding: 14px 16px;
+    color: #aaa;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid #2b2b2b;
+}
+
+.reviews-admin-table td {
+    padding: 14px 16px;
+    color: #e5e5e5;
+    font-size: 13.5px;
+    border-bottom: 1px solid #232323;
+    vertical-align: middle;
+}
+
+.reviews-admin-comment {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.reviews-admin-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #d4af37;
+}
+
+.reviews-admin-status {
+    padding: 40px 0;
+    text-align: center;
+    color: #888;
+}
+
+.reviews-admin-status.error {
+    color: #e05656;
+}
+
+/* STATUS BADGE */
+
+.review-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.review-status-badge.pending {
+    background: rgba(212, 175, 55, 0.12);
+    color: #d4af37;
+}
+
+.review-status-badge.approved {
+    background: rgba(60, 179, 113, 0.12);
+    color: #3cb371;
+}
+
+.review-status-badge.rejected {
+    background: rgba(224, 86, 86, 0.12);
+    color: #e05656;
+}
+
+/* ACTIONS */
+
+.reviews-admin-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.reviews-admin-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+
+    border-radius: 7px;
+    border: 1px solid #333;
+    background: #1b1b1b;
+    color: #ccc;
+    cursor: pointer;
+
+    transition: all 0.15s ease;
+}
+
+.reviews-admin-actions .approve-btn:hover {
+    background: rgba(60, 179, 113, 0.15);
+    border-color: #3cb371;
+    color: #3cb371;
+}
+
+.reviews-admin-actions .reject-btn:hover {
+    background: rgba(212, 175, 55, 0.15);
+    border-color: #d4af37;
+    color: #d4af37;
+}
+
+.reviews-admin-actions .delete-btn:hover {
+    background: rgba(224, 86, 86, 0.15);
+    border-color: #e05656;
+    color: #e05656;
+}

@@ -65,7 +65,7 @@ const getCart = async (req, res) => {
 
     const totalPrice = cart.reduce((total, item) => {
 
-      return total + (item.furniture.priceValue * item.quantity);
+      return total + ((item.furniture?.priceValue || 0) * item.quantity);
 
     }, 0);
 

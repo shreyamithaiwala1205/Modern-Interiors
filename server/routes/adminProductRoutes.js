@@ -7,6 +7,8 @@ const {
     addProduct,
     updateProduct,
     deleteProduct,
+    toggleProductVisibility,
+    getProductCategories,
 } = require("../controllers/adminProductController");
 
 const {
@@ -15,6 +17,17 @@ const {
 } = require("../middleware/authMiddleware");
 
 const upload = require("../middleware/upload");
+
+// ==========================================
+// GET PRODUCT CATEGORIES FROM DATABASE
+// ==========================================
+
+router.get(
+    "/categories",
+    protect,
+    admin,
+    getProductCategories
+);
 
 // ==========================================
 // GET ALL PRODUCTS
@@ -49,6 +62,17 @@ router.put(
     admin,
     upload.single("image"),
     updateProduct
+);
+
+// ==========================================
+// TOGGLE PRODUCT VISIBILITY
+// ==========================================
+
+router.patch(
+    "/:id/visibility",
+    protect,
+    admin,
+    toggleProductVisibility
 );
 
 // ==========================================

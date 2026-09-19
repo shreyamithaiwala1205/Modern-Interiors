@@ -15,7 +15,22 @@ import {
 } from "react-icons/fa";
 
 import { useCart } from "../context/CartContext";
-import imageMap from "../utils/imageMap";
+import ProductImage from "../components/ProductImage";
+
+const isCartItemAvailable = (item) =>
+  Boolean(item.furniture) &&
+  item.furniture.isVisible !== false &&
+  item.furniture.stock > 0;
+
+const getUnavailableReason = (item) => {
+  if (!item.furniture || item.furniture.isVisible === false) {
+    return "Product no longer available";
+  }
+  if (item.furniture.stock <= 0) {
+    return "Out of stock";
+  }
+  return null;
+};
 
 import "../css/Cart.css";
 
@@ -86,7 +101,10 @@ const totalItems = useMemo(() => {
 
   return cart.reduce(
 
-    (total, item) => total + item.quantity,
+    (total, item) =>
+      isCartItemAvailable(item)
+        ? total + item.quantity
+        : total,
 
     0
 
@@ -104,13 +122,25 @@ const totalPrice = useMemo(() => {
 
     (total, item) =>
 
-      total +
-      item.furniture.priceValue *
-      item.quantity,
+      isCartItemAvailable(item)
+        ? total +
+          item.furniture.priceValue *
+          item.quantity
+        : total,
 
     0
 
   );
+
+}, [cart]);
+
+// ===========================
+// Any Unavailable Items?
+// ===========================
+
+const hasUnavailableItems = useMemo(() => {
+
+  return cart.some((item) => !isCartItemAvailable(item));
 
 }, [cart]);
     // ===========================
@@ -151,31 +181,55 @@ const totalPrice = useMemo(() => {
 
           <div className="cart-items">
 
-            {cart.map((item) => (
+            {cart.map((item) => {
+
+              const unavailable = !isCartItemAvailable(item);
+              const atMaxStock =
+                !unavailable &&
+                item.quantity >= item.furniture.stock;
+
+              return (
 
               <div
                 className="cart-card"
                 key={item._id}
               >
 
-                <img
-                  src={imageMap[item.furniture.image]}
-                  alt={item.furniture.name}
+                <ProductImage
+                  image={item.furniture?.image}
+                  alt={item.furniture?.name || "Unavailable product"}
+                  unavailable={unavailable}
                   className="cart-image"
                 />
 
                 <div className="cart-details">
 
-                  <h2>{item.furniture.name}</h2>
+                  <h2>
+                    {item.furniture?.name || "Product Unavailable"}
+                  </h2>
 
-                  <p className="category">
-                    {item.furniture.category}
-                  </p>
+                  {unavailable ? (
+                    <p className="unavailable-label">
+                      {getUnavailableReason(item)}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="category">
+                        {item.furniture.category}
+                      </p>
 
-                  <p className="price">
-                    ₹
-                    {item.furniture.priceValue.toLocaleString()}
-                  </p>
+                      <p className="price">
+                        ₹
+                        {item.furniture.priceValue.toLocaleString()}
+                      </p>
+
+                      {atMaxStock && (
+                        <p className="unavailable-label">
+                          Only {item.furniture.stock} in stock
+                        </p>
+                      )}
+                    </>
+                  )}
 
                 </div>
 
@@ -190,7 +244,7 @@ const totalPrice = useMemo(() => {
                         item.quantity - 1
                       )
                     }
-                    disabled={item.quantity === 1}
+                    disabled={unavailable || item.quantity === 1}
                   >
                     <FaMinus />
                   </button>
@@ -204,6 +258,7 @@ const totalPrice = useMemo(() => {
                         item.quantity + 1
                       )
                     }
+                    disabled={unavailable || atMaxStock}
                   >
                     <FaPlus />
                   </button>
@@ -214,11 +269,12 @@ const totalPrice = useMemo(() => {
 
                 <div className="item-total">
 
-                  ₹
-                  {(
-                    item.furniture.priceValue *
-                    item.quantity
-                  ).toLocaleString()}
+                  {unavailable
+                    ? "—"
+                    : `₹${(
+                        item.furniture.priceValue *
+                        item.quantity
+                      ).toLocaleString()}`}
 
                 </div>
 
@@ -235,7 +291,9 @@ const totalPrice = useMemo(() => {
 
               </div>
 
-            ))}
+              );
+
+            })}
 
           </div>
 
@@ -263,9 +321,16 @@ const totalPrice = useMemo(() => {
 
             </div>
 
+            {hasUnavailableItems && (
+              <p className="unavailable-label">
+                Remove unavailable items to proceed to checkout.
+              </p>
+            )}
+
             <button
               className="checkout-btn"
               onClick={() => navigate("/checkout")}
+              disabled={hasUnavailableItems || totalItems === 0}
             >
               Proceed To Checkout
             </button>

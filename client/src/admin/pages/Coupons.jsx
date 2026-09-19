@@ -11,15 +11,17 @@ import {
     Tag,
     CheckCircle,
     XCircle,
+    Download,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 import AdminLayout from "../AdminLayout";
 import "../css/Coupons.css";
 
-const API =
-    "http://localhost:5000/api/admin/coupons";
+const API = "http://localhost:5000/api/admin/coupons";
 
 const emptyForm = {
     code: "",
@@ -29,64 +31,51 @@ const emptyForm = {
 };
 
 const Coupons = () => {
+    // =====================================================
+    // STATE
+    // =====================================================
+
     const [coupons, setCoupons] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
-    const [loading, setLoading] =
-        useState(true);
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
 
-    const [saving, setSaving] =
-        useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const [search, setSearch] =
-        useState("");
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    const [statusFilter, setStatusFilter] =
-        useState("all");
+    const [modal, setModal] = useState(null);
+    const [selectedCoupon, setSelectedCoupon] = useState(null);
 
-    const [modal, setModal] =
-        useState(null);
-
-    const [selectedCoupon, setSelectedCoupon] =
-        useState(null);
-
-    const [formData, setFormData] =
-        useState(emptyForm);
+    const [formData, setFormData] = useState({
+        ...emptyForm,
+    });
 
     // =====================================================
-    // FETCH
+    // FETCH COUPONS
     // =====================================================
 
     const fetchCoupons = async () => {
         try {
             setLoading(true);
 
-            const token =
-                localStorage.getItem(
-                    "token"
-                );
+            const token = localStorage.getItem("token");
 
-            const response =
-                await axios.get(API, {
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`,
-                    },
-                });
+            const response = await axios.get(API, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-            setCoupons(
-                response.data?.coupons ||
-                []
-            );
+            setCoupons(response.data?.coupons || []);
         } catch (error) {
-            console.error(
-                "FETCH COUPONS:",
-                error
-            );
+            console.error("FETCH COUPONS:", error);
 
             toast.error(
-                error.response?.data
-                    ?.message ||
-                "Failed to fetch coupons"
+                error.response?.data?.message ||
+                    "Failed to fetch coupons"
             );
         } finally {
             setLoading(false);
@@ -98,68 +87,88 @@ const Coupons = () => {
     }, []);
 
     // =====================================================
-    // FILTER
+    // FILTER COUPONS
     // =====================================================
 
-    const filteredCoupons =
-        useMemo(() => {
-            const text =
-                search
-                    .trim()
-                    .toLowerCase();
+    const filteredCoupons = useMemo(() => {
+        const text = search.trim().toLowerCase();
 
-            return coupons.filter(
-                (coupon) => {
-                    const matchSearch =
-                        String(
-                            coupon.code ||
-                                ""
-                        )
-                            .toLowerCase()
-                            .includes(text);
+        return coupons.filter((coupon) => {
+            const matchSearch = String(coupon.code || "")
+                .toLowerCase()
+                .includes(text);
 
-                    const matchStatus =
-                        statusFilter ===
-                        "all"
-                            ? true
-                            : statusFilter ===
-                              "active"
-                            ? coupon.active
-                            : !coupon.active;
+            const matchStatus =
+                statusFilter === "all"
+                    ? true
+                    : statusFilter === "active"
+                    ? coupon.active
+                    : !coupon.active;
 
-                    return (
-                        matchSearch &&
-                        matchStatus
-                    );
-                }
-            );
-        }, [
-            coupons,
-            search,
-            statusFilter,
-        ]);
+            return matchSearch && matchStatus;
+        });
+    }, [coupons, search, statusFilter]);
 
+// =====================================================
+// PAGINATION
+// =====================================================
+
+const totalPages = Math.ceil(
+    filteredCoupons.length / itemsPerPage
+);
+
+const paginatedCoupons = useMemo(() => {
+    const startIndex =
+        (currentPage - 1) * itemsPerPage;
+
+    return filteredCoupons.slice(
+        startIndex,
+        startIndex + itemsPerPage
+    );
+}, [
+    filteredCoupons,
+    currentPage,
+    itemsPerPage,
+]);
+
+// Search / filter change → first page
+useEffect(() => {
+    setCurrentPage(1);
+}, [search, statusFilter]);
+
+// Keep current page valid after delete/filter
+useEffect(() => {
+    if (
+        totalPages > 0 &&
+        currentPage > totalPages
+    ) {
+        setCurrentPage(totalPages);
+    }
+}, [currentPage, totalPages]);
+
+const goToPage = (page) => {
+    if (page < 1 || page > totalPages) {
+        return;
+    }
+
+    setCurrentPage(page);
+};
     // =====================================================
     // STATS
     // =====================================================
 
-    const total =
-        coupons.length;
+    const total = coupons.length;
 
-    const active =
-        coupons.filter(
-            (coupon) =>
-                coupon.active
-        ).length;
+    const active = coupons.filter(
+        (coupon) => coupon.active
+    ).length;
 
-    const inactive =
-        coupons.filter(
-            (coupon) =>
-                !coupon.active
-        ).length;
+    const inactive = coupons.filter(
+        (coupon) => !coupon.active
+    ).length;
 
     // =====================================================
-    // OPEN ADD
+    // OPEN ADD MODAL
     // =====================================================
 
     const openAdd = () => {
@@ -173,7 +182,7 @@ const Coupons = () => {
     };
 
     // =====================================================
-    // OPEN VIEW
+    // OPEN VIEW MODAL
     // =====================================================
 
     const openView = (coupon) => {
@@ -182,38 +191,30 @@ const Coupons = () => {
     };
 
     // =====================================================
-    // OPEN EDIT
+    // OPEN EDIT MODAL
     // =====================================================
 
     const openEdit = (coupon) => {
         setSelectedCoupon(coupon);
 
         setFormData({
-            code:
-                coupon.code || "",
-
-            discount:
-                coupon.discount ?? "",
-
-            minAmount:
-                coupon.minAmount ?? "",
-
-            active:
-                coupon.active ?? true,
+            code: coupon.code || "",
+            discount: coupon.discount ?? "",
+            minAmount: coupon.minAmount ?? "",
+            active: coupon.active ?? true,
         });
 
         setModal("edit");
     };
 
     // =====================================================
-    // CLOSE
+    // CLOSE MODAL
     // =====================================================
 
     const closeModal = () => {
         if (saving) return;
 
         setModal(null);
-
         setSelectedCoupon(null);
 
         setFormData({
@@ -233,52 +234,42 @@ const Coupons = () => {
             type,
         } = e.target;
 
-        setFormData(
-            (previous) => ({
-                ...previous,
-                [name]:
-                    type === "checkbox"
-                        ? checked
-                        : value,
-            })
-        );
+        setFormData((previous) => ({
+            ...previous,
+            [name]:
+                type === "checkbox"
+                    ? checked
+                    : value,
+        }));
     };
 
     // =====================================================
-    // CREATE / UPDATE
+    // CREATE / UPDATE COUPON
     // =====================================================
 
     const saveCoupon = async (e) => {
         e.preventDefault();
 
-        const code =
-            String(
-                formData.code || ""
-            )
-                .trim()
-                .toUpperCase();
+        const code = String(formData.code || "")
+            .trim()
+            .toUpperCase();
 
-        const discount =
-            Number(
-                formData.discount
-            );
+        const discount = Number(
+            formData.discount
+        );
 
-        const minAmount =
-            Number(
-                formData.minAmount || 0
-            );
+        const minAmount = Number(
+            formData.minAmount || 0
+        );
 
+        // Validation
         if (!code) {
-            toast.error(
-                "Enter coupon code"
-            );
+            toast.error("Enter coupon code");
             return;
         }
 
         if (
-            !Number.isFinite(
-                discount
-            ) ||
+            !Number.isFinite(discount) ||
             discount < 1 ||
             discount > 100
         ) {
@@ -289,9 +280,7 @@ const Coupons = () => {
         }
 
         if (
-            !Number.isFinite(
-                minAmount
-            ) ||
+            !Number.isFinite(minAmount) ||
             minAmount < 0
         ) {
             toast.error(
@@ -304,57 +293,60 @@ const Coupons = () => {
             setSaving(true);
 
             const token =
-                localStorage.getItem(
-                    "token"
-                );
+                localStorage.getItem("token");
 
             const data = {
                 code,
                 discount,
                 minAmount,
-                active:
-                    Boolean(
-                        formData.active
-                    ),
+                active: Boolean(
+                    formData.active
+                ),
             };
 
             let response;
 
+            // UPDATE
             if (
                 modal === "edit" &&
                 selectedCoupon?._id
             ) {
-                response =
-                    await axios.put(
-                        `${API}/${selectedCoupon._id}`,
-                        data,
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`,
-                            },
-                        }
-                    );
-            } else {
-                response =
-                    await axios.post(
-                        API,
-                        data,
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`,
-                            },
-                        }
-                    );
+                response = await axios.put(
+                    `${API}/${selectedCoupon._id}`,
+                    data,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+            }
+
+            // CREATE
+            else {
+                response = await axios.post(
+                    API,
+                    data,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
             }
 
             toast.success(
                 response.data?.message ||
-                "Coupon saved successfully"
+                    "Coupon saved successfully"
             );
 
-            closeModal();
+            // Close without blocking because saving
+            setModal(null);
+            setSelectedCoupon(null);
+
+            setFormData({
+                ...emptyForm,
+            });
 
             await fetchCoupons();
         } catch (error) {
@@ -364,9 +356,8 @@ const Coupons = () => {
             );
 
             toast.error(
-                error.response?.data
-                    ?.message ||
-                "Failed to save coupon"
+                error.response?.data?.message ||
+                    "Failed to save coupon"
             );
         } finally {
             setSaving(false);
@@ -374,126 +365,183 @@ const Coupons = () => {
     };
 
     // =====================================================
-    // DELETE
+    // EXPORT CSV
     // =====================================================
 
-    const deleteCoupon =
-        async (coupon) => {
-            const yes =
-                window.confirm(
-                    `Delete coupon ${coupon.code}?`
-                );
+    const exportCouponsCSV = () => {
+        if (coupons.length === 0) {
+            toast.error(
+                "No coupons available to export"
+            );
+            return;
+        }
 
-            if (!yes) return;
+        const headers = [
+            "No.",
+            "Coupon Code",
+            "Discount (%)",
+            "Minimum Order",
+            "Status",
+        ];
 
-            try {
-                const token =
-                    localStorage.getItem(
-                        "token"
-                    );
+        const rows = coupons.map(
+            (coupon, index) => [
+                index + 1,
+                coupon.code || "",
+                coupon.discount ?? "",
+                coupon.minAmount ?? 0,
+                coupon.active
+                    ? "Active"
+                    : "Inactive",
+            ]
+        );
 
-                const response =
-                    await axios.delete(
-                        `${API}/${coupon._id}`,
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`,
-                            },
-                        }
-                    );
+        const csvContent = [
+            headers.join(","),
+            ...rows.map((row) =>
+                row
+                    .map(
+                        (value) =>
+                            `"${String(value).replace(
+                                /"/g,
+                                '""'
+                            )}"`
+                    )
+                    .join(",")
+            ),
+        ].join("\n");
 
-                toast.success(
-                    response.data
-                        ?.message ||
-                    "Coupon deleted successfully"
-                );
-
-                setCoupons(
-                    (previous) =>
-                        previous.filter(
-                            (item) =>
-                                item._id !==
-                                coupon._id
-                        )
-                );
-            } catch (error) {
-                console.error(
-                    "DELETE COUPON ERROR:",
-                    error
-                );
-
-                toast.error(
-                    error.response?.data
-                        ?.message ||
-                    "Failed to delete coupon"
-                );
+        const blob = new Blob(
+            [csvContent],
+            {
+                type: "text/csv;charset=utf-8;",
             }
-        };
+        );
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+        link.download = "coupons.csv";
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+        toast.success(
+            "Coupons exported successfully"
+        );
+    };
 
     // =====================================================
-    // TOGGLE
+    // DELETE COUPON
     // =====================================================
 
-    const toggleCoupon =
-        async (coupon) => {
-            try {
-                const token =
-                    localStorage.getItem(
-                        "token"
-                    );
+    const deleteCoupon = async (coupon) => {
+        const yes = window.confirm(
+            `Delete coupon ${coupon.code}?`
+        );
 
-                const newStatus =
-                    !coupon.active;
+        if (!yes) return;
 
-                const response =
-                    await axios.put(
-                        `${API}/${coupon._id}`,
-                        {
-                            active:
-                                newStatus,
+        try {
+            const token =
+                localStorage.getItem("token");
+
+            const response =
+                await axios.delete(
+                    `${API}/${coupon._id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
                         },
-                        {
-                            headers: {
-                                Authorization:
-                                    `Bearer ${token}`,
-                            },
-                        }
-                    );
-
-                toast.success(
-                    newStatus
-                        ? "Coupon activated"
-                        : "Coupon deactivated"
+                    }
                 );
 
-                setCoupons(
-                    (previous) =>
-                        previous.map(
-                            (item) =>
-                                item._id ===
-                                coupon._id
-                                    ? {
-                                          ...item,
-                                          active:
-                                              newStatus,
-                                      }
-                                    : item
-                        )
-                );
-            } catch (error) {
-                console.error(
-                    "TOGGLE COUPON ERROR:",
-                    error
-                );
+            toast.success(
+                response.data?.message ||
+                    "Coupon deleted successfully"
+            );
 
-                toast.error(
-                    error.response?.data
-                        ?.message ||
+            setCoupons((previous) =>
+                previous.filter(
+                    (item) =>
+                        item._id !== coupon._id
+                )
+            );
+        } catch (error) {
+            console.error(
+                "DELETE COUPON ERROR:",
+                error
+            );
+
+            toast.error(
+                error.response?.data?.message ||
+                    "Failed to delete coupon"
+            );
+        }
+    };
+
+    // =====================================================
+    // TOGGLE COUPON STATUS
+    // =====================================================
+
+    const toggleCoupon = async (coupon) => {
+        try {
+            const token =
+                localStorage.getItem("token");
+
+            const newStatus =
+                !coupon.active;
+
+            await axios.put(
+                `${API}/${coupon._id}`,
+                {
+                    active: newStatus,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            toast.success(
+                newStatus
+                    ? "Coupon activated"
+                    : "Coupon deactivated"
+            );
+
+            setCoupons((previous) =>
+                previous.map((item) =>
+                    item._id === coupon._id
+                        ? {
+                              ...item,
+                              active:
+                                  newStatus,
+                          }
+                        : item
+                )
+            );
+        } catch (error) {
+            console.error(
+                "TOGGLE COUPON ERROR:",
+                error
+            );
+
+            toast.error(
+                error.response?.data?.message ||
                     "Failed to change coupon status"
-                );
-            }
-        };
+            );
+        }
+    };
 
     // =====================================================
     // LOADING
@@ -502,12 +550,27 @@ const Coupons = () => {
     if (loading) {
         return (
             <AdminLayout>
-                <div className="coupons-loading">
-                    Loading Coupons...
+                <div className="coupons-page">
+                    <div className="coupons-loading-screen">
+                        <div className="coupons-loader"></div>
+
+                        <h2>
+                            Loading Coupons...
+                        </h2>
+
+                        <p>
+                            Please wait while coupon
+                            data is loading.
+                        </p>
+                    </div>
                 </div>
             </AdminLayout>
         );
     }
+
+    // =====================================================
+    // UI
+    // =====================================================
 
     return (
         <AdminLayout>
@@ -521,15 +584,15 @@ const Coupons = () => {
                         <h1>Coupons</h1>
 
                         <p>
-                            Manage discount coupons for your customers.
+                            Manage discount coupons
+                            for your customers.
                         </p>
                     </div>
 
                     <button
+                        type="button"
                         className="add-coupon-btn"
-                        onClick={
-                            openAdd
-                        }
+                        onClick={openAdd}
                     >
                         <Plus size={18} />
                         Add Coupon
@@ -542,6 +605,7 @@ const Coupons = () => {
                 <div className="coupons-stats">
 
                     <div className="coupon-stat-card">
+
                         <Tag size={25} />
 
                         <div>
@@ -553,9 +617,11 @@ const Coupons = () => {
                                 {total}
                             </strong>
                         </div>
+
                     </div>
 
                     <div className="coupon-stat-card active">
+
                         <CheckCircle
                             size={25}
                         />
@@ -569,9 +635,11 @@ const Coupons = () => {
                                 {active}
                             </strong>
                         </div>
+
                     </div>
 
                     <div className="coupon-stat-card inactive">
+
                         <XCircle
                             size={25}
                         />
@@ -585,6 +653,7 @@ const Coupons = () => {
                                 {inactive}
                             </strong>
                         </div>
+
                     </div>
 
                 </div>
@@ -593,46 +662,73 @@ const Coupons = () => {
 
                 <div className="coupons-toolbar">
 
-                    <div className="coupon-search">
-                        <Search
-                            size={18}
-                        />
+                    {/* LEFT */}
 
-                        <input
-                            value={
-                                search
+                    <div className="coupons-toolbar-left">
+
+                        <span className="total-coupons-text">
+                            Total Coupons:{" "}
+                            <strong>
+                                {total}
+                            </strong>
+                        </span>
+
+                        <button
+                            type="button"
+                            className="export-coupons-btn"
+                            onClick={
+                                exportCouponsCSV
                             }
+                        >
+                            <Download size={16} />
+                            Export CSV
+                        </button>
+
+                    </div>
+
+                    {/* RIGHT */}
+
+                    <div className="coupons-toolbar-right">
+
+                        <div className="coupon-search">
+
+                            <Search size={18} />
+
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) =>
+                                    setSearch(
+                                        e.target.value
+                                    )
+                                }
+                                placeholder="Search coupon code..."
+                            />
+
+                        </div>
+
+                        <select
+                            value={statusFilter}
                             onChange={(e) =>
-                                setSearch(
+                                setStatusFilter(
                                     e.target.value
                                 )
                             }
-                            placeholder="Search coupon code..."
-                        />
+                        >
+                            <option value="all">
+                                All Coupons
+                            </option>
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="inactive">
+                                Inactive
+                            </option>
+                        </select>
+
                     </div>
-
-                    <select
-                        value={
-                            statusFilter
-                        }
-                        onChange={(e) =>
-                            setStatusFilter(
-                                e.target.value
-                            )
-                        }
-                    >
-                        <option value="all">
-                            All Coupons
-                        </option>
-
-                        <option value="active">
-                            Active
-                        </option>
-
-                        <option value="inactive">
-                            Inactive
-                        </option>
-                    </select>
 
                 </div>
 
@@ -647,7 +743,9 @@ const Coupons = () => {
                                 <th>#</th>
                                 <th>Code</th>
                                 <th>Discount</th>
-                                <th>Minimum Order</th>
+                                <th>
+                                    Minimum Order
+                                </th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -655,11 +753,8 @@ const Coupons = () => {
 
                         <tbody>
 
-                            {filteredCoupons.map(
-                                (
-                                    coupon,
-                                    index
-                                ) => (
+                            {paginatedCoupons.map(
+                                (coupon, index) => (
                                     <tr
                                         key={
                                             coupon._id
@@ -667,7 +762,11 @@ const Coupons = () => {
                                     >
 
                                         <td>
-                                            {index + 1}
+                                            {(currentPage -
+                                                1) *
+                                                itemsPerPage +
+                                                index +
+                                                1}
                                         </td>
 
                                         <td>
@@ -689,7 +788,7 @@ const Coupons = () => {
                                             ₹
                                             {Number(
                                                 coupon.minAmount ||
-                                                0
+                                                    0
                                             ).toLocaleString(
                                                 "en-IN"
                                             )}
@@ -703,18 +802,20 @@ const Coupons = () => {
                                                         : "inactive"
                                                 }`}
                                             >
-                                                {
-                                                    coupon.active
-                                                        ? "Active"
-                                                        : "Inactive"
-                                                }
+                                                {coupon.active
+                                                    ? "Active"
+                                                    : "Inactive"}
                                             </span>
                                         </td>
 
                                         <td>
+
                                             <div className="coupon-actions">
 
+                                                {/* VIEW */}
+
                                                 <button
+                                                    type="button"
                                                     className="coupon-view-btn"
                                                     onClick={() =>
                                                         openView(
@@ -730,7 +831,10 @@ const Coupons = () => {
                                                     />
                                                 </button>
 
+                                                {/* EDIT */}
+
                                                 <button
+                                                    type="button"
                                                     className="coupon-edit-btn"
                                                     onClick={() =>
                                                         openEdit(
@@ -746,15 +850,19 @@ const Coupons = () => {
                                                     />
                                                 </button>
 
-                                                {/* TOGGLE SWITCH */}
+                                                {/* TOGGLE */}
 
                                                 <button
                                                     type="button"
                                                     className={`coupon-toggle-switch ${
-                                                        coupon.active ? "on" : ""
+                                                        coupon.active
+                                                            ? "on"
+                                                            : ""
                                                     }`}
                                                     onClick={() =>
-                                                        toggleCoupon(coupon)
+                                                        toggleCoupon(
+                                                            coupon
+                                                        )
                                                     }
                                                     title={
                                                         coupon.active
@@ -765,7 +873,10 @@ const Coupons = () => {
                                                     <span className="toggle-circle" />
                                                 </button>
 
+                                                {/* DELETE */}
+
                                                 <button
+                                                    type="button"
                                                     className="coupon-delete-btn"
                                                     onClick={() =>
                                                         deleteCoupon(
@@ -782,6 +893,7 @@ const Coupons = () => {
                                                 </button>
 
                                             </div>
+
                                         </td>
 
                                     </tr>
@@ -805,250 +917,468 @@ const Coupons = () => {
                     </table>
 
                 </div>
-            </div>
 
-            {/* =====================================================
-                MODAL
-            ====================================================== */}
+                {/* PAGINATION */}
 
-            {modal && (
-                <div
-                    className="coupon-modal-overlay"
-                    onClick={
-                        closeModal
-                    }
-                >
-                    <div
-                        className="coupon-modal"
-                        onClick={(e) =>
-                            e.stopPropagation()
-                        }
-                    >
+                {filteredCoupons.length > 0 &&
+                    totalPages > 1 && (
+                        <div className="coupons-pagination">
 
-                        <div className="coupon-modal-header">
-
-                            <div>
-                                <h2>
-                                    {modal ===
-                                    "add"
-                                        ? "Add Coupon"
-                                        : modal ===
-                                          "edit"
-                                        ? "Edit Coupon"
-                                        : "Coupon Details"}
-                                </h2>
-                            </div>
+                            {/* PREVIOUS */}
 
                             <button
-                                className="coupon-close-btn"
-                                onClick={
-                                    closeModal
+                                type="button"
+                                className="coupon-page-btn"
+                                disabled={
+                                    currentPage ===
+                                    1
+                                }
+                                onClick={() =>
+                                    goToPage(
+                                        currentPage - 1
+                                    )
                                 }
                             >
-                                <X
-                                    size={20}
+                                <ChevronLeft
+                                    size={17}
+                                />
+                            </button>
+
+                            {/* PAGE NUMBERS */}
+
+                            <div className="coupon-page-numbers">
+
+                                {totalPages <= 5 ? (
+                                    Array.from(
+                                        {
+                                            length:
+                                                totalPages,
+                                        },
+                                        (
+                                            _,
+                                            index
+                                        ) =>
+                                            index + 1
+                                    ).map(
+                                        (
+                                            page
+                                        ) => (
+                                            <button
+                                                key={
+                                                    page
+                                                }
+                                                type="button"
+                                                className={`coupon-page-number ${
+                                                    currentPage ===
+                                                    page
+                                                        ? "active"
+                                                        : ""
+                                                }`}
+                                                onClick={() =>
+                                                    goToPage(
+                                                        page
+                                                    )
+                                                }
+                                            >
+                                                {
+                                                    page
+                                                }
+                                            </button>
+                                        )
+                                    )
+                                ) : (
+                                    <>
+                                        {/* FIRST PAGE */}
+
+                                        <button
+                                            type="button"
+                                            className={`coupon-page-number ${
+                                                currentPage ===
+                                                1
+                                                    ? "active"
+                                                    : ""
+                                            }`}
+                                            onClick={() =>
+                                                goToPage(
+                                                    1
+                                                )
+                                            }
+                                        >
+                                            1
+                                        </button>
+
+                                        {/* LEFT DOTS */}
+
+                                        {currentPage >
+                                            3 && (
+                                            <span className="coupon-pagination-dots">
+                                                ...
+                                            </span>
+                                        )}
+
+                                        {/* MIDDLE PAGES */}
+
+                                        {Array.from(
+                                            {
+                                                length: 3,
+                                            },
+                                            (
+                                                _,
+                                                index
+                                            ) =>
+                                                currentPage -
+                                                1 +
+                                                index
+                                        )
+                                            .filter(
+                                                (
+                                                    page
+                                                ) =>
+                                                    page >
+                                                        1 &&
+                                                    page <
+                                                        totalPages
+                                            )
+                                            .map(
+                                                (
+                                                    page
+                                                ) => (
+                                                    <button
+                                                        key={
+                                                            page
+                                                        }
+                                                        type="button"
+                                                        className={`coupon-page-number ${
+                                                            currentPage ===
+                                                            page
+                                                                ? "active"
+                                                                : ""
+                                                        }`}
+                                                        onClick={() =>
+                                                            goToPage(
+                                                                page
+                                                            )
+                                                        }
+                                                    >
+                                                        {
+                                                            page
+                                                        }
+                                                    </button>
+                                                )
+                                            )}
+
+                                        {/* RIGHT DOTS */}
+
+                                        {currentPage <
+                                            totalPages -
+                                                2 && (
+                                            <span className="coupon-pagination-dots">
+                                                ...
+                                            </span>
+                                        )}
+
+                                        {/* LAST PAGE */}
+
+                                        <button
+                                            type="button"
+                                            className={`coupon-page-number ${
+                                                currentPage ===
+                                                totalPages
+                                                    ? "active"
+                                                    : ""
+                                            }`}
+                                            onClick={() =>
+                                                goToPage(
+                                                    totalPages
+                                                )
+                                            }
+                                        >
+                                            {
+                                                totalPages
+                                            }
+                                        </button>
+                                    </>
+                                )}
+
+                            </div>
+
+                            {/* NEXT */}
+
+                            <button
+                                type="button"
+                                className="coupon-page-btn"
+                                disabled={
+                                    currentPage ===
+                                    totalPages
+                                }
+                                onClick={() =>
+                                    goToPage(
+                                        currentPage + 1
+                                    )
+                                }
+                            >
+                                <ChevronRight
+                                    size={17}
                                 />
                             </button>
 
                         </div>
+                    )}
 
-                        {/* VIEW */}
+                {/* =====================================================
+                    MODAL
+                ===================================================== */}
 
-                        {modal ===
-                            "view" && (
-                            <div className="coupon-view-body">
+                {modal && (
+                    <div
+                        className="coupon-modal-overlay"
+                        onClick={closeModal}
+                    >
 
-                                <div className="coupon-view-card">
-                                    <span>
-                                        Coupon Code
-                                    </span>
+                        <div
+                            className="coupon-modal"
+                            onClick={(e) =>
+                                e.stopPropagation()
+                            }
+                        >
 
-                                    <strong>
-                                        {
-                                            selectedCoupon?.code
-                                        }
-                                    </strong>
-                                </div>
+                            {/* MODAL HEADER */}
 
-                                <div className="coupon-view-card">
-                                    <span>
-                                        Discount
-                                    </span>
+                            <div className="coupon-modal-header">
 
-                                    <strong>
-                                        {
-                                            selectedCoupon?.discount
-                                        }
-                                        %
-                                    </strong>
-                                </div>
-
-                                <div className="coupon-view-card">
-                                    <span>
-                                        Minimum Order
-                                    </span>
-
-                                    <strong>
-                                        ₹
-                                        {Number(
-                                            selectedCoupon?.minAmount ||
-                                            0
-                                        ).toLocaleString(
-                                            "en-IN"
-                                        )}
-                                    </strong>
-                                </div>
-
-                                <div className="coupon-view-card">
-                                    <span>
-                                        Status
-                                    </span>
-
-                                    <strong>
-                                        {
-                                            selectedCoupon?.active
-                                                ? "Active"
-                                                : "Inactive"
-                                        }
-                                    </strong>
-                                </div>
-
-                            </div>
-                        )}
-
-                        {/* ADD / EDIT */}
-
-                        {(modal ===
-                            "add" ||
-                            modal ===
-                                "edit") && (
-                            <form
-                                className="coupon-form"
-                                onSubmit={
-                                    saveCoupon
-                                }
-                            >
-
-                                <div className="coupon-form-group">
-
-                                    <label>
-                                        Coupon Code
-                                    </label>
-
-                                    <input
-                                        name="code"
-                                        value={
-                                            formData.code
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        placeholder="SAVE10"
-                                    />
-
-                                </div>
-
-                                <div className="coupon-form-group">
-
-                                    <label>
-                                        Discount (%)
-                                    </label>
-
-                                    <input
-                                        type="number"
-                                        name="discount"
-                                        value={
-                                            formData.discount
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        min="1"
-                                        max="100"
-                                        placeholder="10"
-                                    />
-
-                                </div>
-
-                                <div className="coupon-form-group">
-
-                                    <label>
-                                        Minimum Order Amount
-                                    </label>
-
-                                    <input
-                                        type="number"
-                                        name="minAmount"
-                                        value={
-                                            formData.minAmount
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        min="0"
-                                        placeholder="1000"
-                                    />
-
-                                </div>
-
-                                {/* OPTIONAL ACTIVE CHECKBOX */}
-
-                                <label className="coupon-checkbox-row">
-
-                                    <input
-                                        type="checkbox"
-                                        name="active"
-                                        checked={
-                                            formData.active
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                    />
-
-                                    <span>
-                                        Active
-                                    </span>
-
-                                </label>
-
-                                <div className="coupon-modal-actions">
-
-                                    <button
-                                        type="button"
-                                        className="coupon-cancel-btn"
-                                        onClick={
-                                            closeModal
-                                        }
-                                    >
-                                        Cancel
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        className="coupon-save-btn"
-                                        disabled={
-                                            saving
-                                        }
-                                    >
-                                        {saving
-                                            ? "Saving..."
+                                <div>
+                                    <h2>
+                                        {modal ===
+                                        "add"
+                                            ? "Add Coupon"
                                             : modal ===
                                               "edit"
-                                            ? "Update Coupon"
-                                            : "Create Coupon"}
-                                    </button>
-
+                                            ? "Edit Coupon"
+                                            : "Coupon Details"}
+                                    </h2>
                                 </div>
 
-                            </form>
-                        )}
+                                <button
+                                    type="button"
+                                    className="coupon-close-btn"
+                                    onClick={
+                                        closeModal
+                                    }
+                                >
+                                    <X size={20} />
+                                </button>
+
+                            </div>
+
+                            {/* VIEW MODAL */}
+
+                            {modal ===
+                                "view" && (
+                                <div className="coupon-view-body">
+
+                                    <div className="coupon-view-card">
+                                        <span>
+                                            Coupon Code
+                                        </span>
+
+                                        <strong>
+                                            {
+                                                selectedCoupon?.code
+                                            }
+                                        </strong>
+                                    </div>
+
+                                    <div className="coupon-view-card">
+                                        <span>
+                                            Discount
+                                        </span>
+
+                                        <strong>
+                                            {
+                                                selectedCoupon?.discount
+                                            }
+                                            %
+                                        </strong>
+                                    </div>
+
+                                    <div className="coupon-view-card">
+                                        <span>
+                                            Minimum Order
+                                        </span>
+
+                                        <strong>
+                                            ₹
+                                            {Number(
+                                                selectedCoupon?.minAmount ||
+                                                    0
+                                            ).toLocaleString(
+                                                "en-IN"
+                                            )}
+                                        </strong>
+                                    </div>
+
+                                    <div className="coupon-view-card">
+                                        <span>
+                                            Status
+                                        </span>
+
+                                        <strong>
+                                            {selectedCoupon?.active
+                                                ? "Active"
+                                                : "Inactive"}
+                                        </strong>
+                                    </div>
+
+                                </div>
+                            )}
+
+                            {/* ADD / EDIT MODAL */}
+
+                            {(modal === "add" ||
+                                modal === "edit") && (
+                                <form
+                                    className="coupon-form"
+                                    onSubmit={
+                                        saveCoupon
+                                    }
+                                >
+
+                                    {/* COUPON CODE */}
+
+                                    <div className="coupon-form-group">
+
+                                        <label>
+                                            Coupon Code
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            name="code"
+                                            value={
+                                                formData.code
+                                            }
+                                            onChange={
+                                                handleChange
+                                            }
+                                            placeholder="SAVE10"
+                                        />
+
+                                    </div>
+
+                                    {/* DISCOUNT */}
+
+                                    <div className="coupon-form-group">
+
+                                        <label>
+                                            Discount (%)
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="discount"
+                                            value={
+                                                formData.discount
+                                            }
+                                            onChange={
+                                                handleChange
+                                            }
+                                            min="1"
+                                            max="100"
+                                            placeholder="10"
+                                        />
+
+                                    </div>
+
+                                    {/* MINIMUM ORDER */}
+
+                                    <div className="coupon-form-group">
+
+                                        <label>
+                                            Minimum Order Amount
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="minAmount"
+                                            value={
+                                                formData.minAmount
+                                            }
+                                            onChange={
+                                                handleChange
+                                            }
+                                            min="0"
+                                            placeholder="1000"
+                                        />
+
+                                    </div>
+
+                                    {/* ACTIVE */}
+
+                                    <label className="coupon-checkbox-row">
+
+                                        <input
+                                            type="checkbox"
+                                            name="active"
+                                            checked={
+                                                formData.active
+                                            }
+                                            onChange={
+                                                handleChange
+                                            }
+                                        />
+
+                                        <span>
+                                            Active
+                                        </span>
+
+                                    </label>
+
+                                    {/* ACTIONS */}
+
+                                    <div className="coupon-modal-actions">
+
+                                        <button
+                                            type="button"
+                                            className="coupon-cancel-btn"
+                                            onClick={
+                                                closeModal
+                                            }
+                                            disabled={
+                                                saving
+                                            }
+                                        >
+                                            Cancel
+                                        </button>
+
+                                        <button
+                                            type="submit"
+                                            className="coupon-save-btn"
+                                            disabled={
+                                                saving
+                                            }
+                                        >
+                                            {saving
+                                                ? "Saving..."
+                                                : modal ===
+                                                  "edit"
+                                                ? "Update Coupon"
+                                                : "Create Coupon"}
+                                        </button>
+
+                                    </div>
+
+                                </form>
+                            )}
+
+                        </div>
 
                     </div>
-                </div>
-            )}
+                )}
+
+            </div>
         </AdminLayout>
     );
 };
 
 export default Coupons;
+

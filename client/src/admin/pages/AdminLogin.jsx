@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
+import { getFriendlyErrorMessage } from "../../utils/errorHandler";
+import { useAuth } from "../../context/AuthContext";
 
 import "../css/Admin.css";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { user, login } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -13,6 +17,13 @@ const AdminLogin = () => {
   });
 
   const [loading, setLoading] = useState(false);
+
+  // If already logged in as admin, redirect to admin dashboard
+  useEffect(() => {
+    if (user && user.role === "admin") {
+      navigate("/admin/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,38 +35,51 @@ const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.email.trim() || !formData.password) {
+      toast.error("Please enter both your admin email and password.");
+      return;
+    }
+
     try {
       setLoading(true);
 
       const res = await axios.post(
         "http://localhost:5000/api/auth/login",
-        formData
+        {
+          email: formData.email.trim(),
+          password: formData.password,
+        }
       );
 
       if (!res.data.success) {
-        alert(res.data.message);
+        toast.error(res.data.message || "Admin login failed.");
         return;
       }
 
       // Only Admin Can Login
-
       if (res.data.user.role !== "admin") {
-        alert("Access Denied! Admin Only.");
+        toast.error("Access Denied! Administrator privileges required.");
         return;
       }
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem(
-        "user",
-        JSON.stringify(res.data.user)
-      );
+      // Sync auth state with global AuthContext
+      login(res.data.user, res.data.token);
 
-      navigate("/admin/dashboard");
+      const adminName = res.data.user?.name
+        ? res.data.user.name.split(" ")[0]
+        : "Admin";
+
+      toast.success(`Welcome back, ${adminName}! Admin login successful.`);
+
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 500);
     } catch (error) {
-      alert(
-        error.response?.data?.message ||
-          "Login Failed"
+      const errorMsg = getFriendlyErrorMessage(
+        error,
+        "Invalid administrator credentials. Please check your details and try again."
       );
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -63,13 +87,10 @@ const AdminLogin = () => {
 
   return (
     <div className="admin-login">
-
       <div className="admin-login-box">
-
         <h1>Admin Login</h1>
 
         <form onSubmit={handleSubmit}>
-
           <input
             type="email"
             name="email"
@@ -92,15 +113,10 @@ const AdminLogin = () => {
             type="submit"
             disabled={loading}
           >
-            {loading
-              ? "Logging in..."
-              : "Login"}
+            {loading ? "Logging in..." : "Login"}
           </button>
-
         </form>
-
       </div>
-
     </div>
   );
 };

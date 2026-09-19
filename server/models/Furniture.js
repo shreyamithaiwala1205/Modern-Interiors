@@ -44,6 +44,11 @@ const furnitureSchema = new mongoose.Schema(
             max: 5,
         },
 
+        reviewCount: {
+            type: Number,
+            default: 0,
+        },
+
         stock: {
             type: Number,
             required: true,
@@ -83,6 +88,21 @@ const furnitureSchema = new mongoose.Schema(
                 type: String,
             },
         ],
+
+        isVisible: {
+            type: Boolean,
+            default: true,
+        },
+
+        autoHiddenDueToStock: {
+            type: Boolean,
+            default: false,
+        },
+
+        tags: {
+            type: [String],
+            default: [],
+        },
 
     },
     {

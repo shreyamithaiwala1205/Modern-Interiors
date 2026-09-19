@@ -3,6 +3,7 @@ import axios from "axios";
 import { FaKey, FaClock } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { getFriendlyErrorMessage } from "../utils/errorHandler";
 import "../css/VerifyOTP.css";
 
 function VerifyOTP() {
@@ -12,14 +13,6 @@ function VerifyOTP() {
   const location = useLocation();
 
   const email = location.state?.email || "";
-
-  useEffect(() => {
-
-    if (!email) {
-      navigate("/forgot-password");
-    }
-
-  }, [email, navigate]);
 
   const [otp, setOtp] = useState("");
 
@@ -35,25 +28,30 @@ function VerifyOTP() {
 
   useEffect(() => {
 
-    if (expired) return;
-
-    if (timeLeft <= 0) {
-
-      setExpired(true);
-
+    if (!email) {
+      navigate("/forgot-password");
       return;
-
     }
 
     const timer = setInterval(() => {
 
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft((prev) => {
+
+        if (prev <= 1) {
+          clearInterval(timer);
+          setExpired(true);
+          return 0;
+        }
+
+        return prev - 1;
+
+      });
 
     }, 1000);
 
     return () => clearInterval(timer);
 
-  }, [timeLeft, expired]);
+  }, [email, navigate]);
 
   // ==========================
   // Format Timer
@@ -65,7 +63,7 @@ function VerifyOTP() {
 
     const seconds = timeLeft % 60;
 
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 
   };
 
@@ -85,7 +83,7 @@ function VerifyOTP() {
 
     if (!otp) {
 
-      return toast.error("Please Enter OTP");
+      return toast.error("Please enter the 6-digit OTP code.");
 
     }
 
@@ -104,7 +102,7 @@ function VerifyOTP() {
 
       );
 
-      toast.success(data.message);
+      toast.success(data.message || "OTP verified successfully.");
 
       navigate("/reset-password", {
 
@@ -121,13 +119,11 @@ function VerifyOTP() {
 
     catch (error) {
 
-      toast.error(
-
-        error.response?.data?.message ||
-
-        "Invalid OTP"
-
+      const errorMsg = getFriendlyErrorMessage(
+        error,
+        "Invalid or expired verification code. Please try again."
       );
+      toast.error(errorMsg);
 
     }
 
@@ -157,7 +153,7 @@ function VerifyOTP() {
 
       );
 
-      toast.success(data.message);
+      toast.success(data.message || "New OTP sent successfully.");
 
       setOtp("");
 
@@ -169,13 +165,11 @@ function VerifyOTP() {
 
     catch (error) {
 
-      toast.error(
-
-        error.response?.data?.message ||
-
-        "Unable to resend OTP"
-
+      const errorMsg = getFriendlyErrorMessage(
+        error,
+        "Unable to resend OTP right now. Please try again."
       );
+      toast.error(errorMsg);
 
     }
 

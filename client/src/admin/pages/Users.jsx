@@ -7,7 +7,8 @@ import {
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
+import { Download } from "lucide-react";
 
 import AdminLayout from "../AdminLayout";
 import "../css/Users.css";
@@ -519,19 +520,25 @@ const Users = () => {
     if (loading) {
         return (
             <AdminLayout>
+
                 <div className="users-page">
-                    <div
-                        className="users-loading"
-                        style={{
-                            padding: "60px",
-                            textAlign: "center",
-                            color: "#d4af37",
-                            fontSize: "20px",
-                        }}
-                    >
-                        Loading Users...
+
+                    <div className="users-loading-screen">
+
+                        <div className="users-loader"></div>
+
+                        <h2>
+                            Loading Users...
+                        </h2>
+
+                        <p>
+                            Please wait while user data is loading.
+                        </p>
+
                     </div>
+
                 </div>
+
             </AdminLayout>
         );
     }
@@ -650,7 +657,7 @@ const Users = () => {
                     <div className="users-count">
 
                         <span>
-                            Total Users:
+                            Total Users : 
                             <strong>
                                 {
                                     filteredUsers.length
@@ -665,6 +672,7 @@ const Users = () => {
                                 exportUsers
                             }
                         >
+                        <Download size={15} /> 
                             Export CSV
                         </button>
 

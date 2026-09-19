@@ -13,9 +13,10 @@ import {
     CircleX,
     RefreshCw,
     X,
+    Download,
 } from "lucide-react";
 
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 import AdminLayout from "../AdminLayout";
 import "../css/Consultations.css";
@@ -24,34 +25,20 @@ const API =
     "http://localhost:5000/api/admin/consultations";
 
 const Consultations = () => {
-    const [consultations, setConsultations] =
-        useState([]);
-
-    const [loading, setLoading] =
-        useState(true);
-
-    const [error, setError] =
-        useState("");
-
-    const [search, setSearch] =
-        useState("");
-
-    const [statusFilter, setStatusFilter] =
-        useState("all");
-
+    const [consultations, setConsultations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
     const [selectedConsultation, setSelectedConsultation] =
         useState(null);
-
-    const [showModal, setShowModal] =
-        useState(false);
-
-    const [currentPage, setCurrentPage] =
-        useState(1);
+    const [showModal, setShowModal] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const consultationsPerPage = 5;
 
     // =====================================================
-    // FETCH
+    // FETCH CONSULTATIONS
     // =====================================================
 
     const fetchConsultations = async () => {
@@ -59,21 +46,16 @@ const Consultations = () => {
             setLoading(true);
             setError("");
 
-            const token =
-                localStorage.getItem("token");
+            const token = localStorage.getItem("token");
 
-            const response =
-                await axios.get(API, {
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`,
-                    },
-                });
+            const response = await axios.get(API, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
             setConsultations(
-                Array.isArray(
-                    response.data?.consultations
-                )
+                Array.isArray(response.data?.consultations)
                     ? response.data.consultations
                     : []
             );
@@ -84,9 +66,8 @@ const Consultations = () => {
             );
 
             setError(
-                error.response?.data
-                    ?.message ||
-                "Failed to load consultations."
+                error.response?.data?.message ||
+                    "Failed to load consultations."
             );
         } finally {
             setLoading(false);
@@ -101,76 +82,43 @@ const Consultations = () => {
     // FILTER + SEARCH
     // =====================================================
 
-    const filteredConsultations =
-        useMemo(() => {
-            const text =
-                search
-                    .trim()
-                    .toLowerCase();
+    const filteredConsultations = useMemo(() => {
+        const text = search.trim().toLowerCase();
 
-            return consultations.filter(
-                (item) => {
-                    const name =
-                        String(
-                            item.name || ""
-                        ).toLowerCase();
+        return consultations.filter((item) => {
+            const name = String(item.name || "").toLowerCase();
+            const email = String(item.email || "").toLowerCase();
+            const phone = String(item.phone || "").toLowerCase();
+            const project = String(item.project || "").toLowerCase();
 
-                    const email =
-                        String(
-                            item.email || ""
-                        ).toLowerCase();
+            const matchesSearch =
+                name.includes(text) ||
+                email.includes(text) ||
+                phone.includes(text) ||
+                project.includes(text);
 
-                    const phone =
-                        String(
-                            item.phone || ""
-                        ).toLowerCase();
+            const matchesStatus =
+                statusFilter === "all"
+                    ? true
+                    : item.status === statusFilter;
 
-                    const project =
-                        String(
-                            item.project || ""
-                        ).toLowerCase();
-
-                    const matchesSearch =
-                        name.includes(text) ||
-                        email.includes(text) ||
-                        phone.includes(text) ||
-                        project.includes(text);
-
-                    const matchesStatus =
-                        statusFilter ===
-                            "all"
-                            ? true
-                            : item.status ===
-                              statusFilter;
-
-                    return (
-                        matchesSearch &&
-                        matchesStatus
-                    );
-                }
-            );
-        }, [
-            consultations,
-            search,
-            statusFilter,
-        ]);
+            return matchesSearch && matchesStatus;
+        });
+    }, [consultations, search, statusFilter]);
 
     // =====================================================
     // PAGINATION
     // =====================================================
 
     const totalPages = Math.ceil(
-        filteredConsultations.length /
-            consultationsPerPage
+        filteredConsultations.length / consultationsPerPage
     );
 
     const indexOfLast =
-        currentPage *
-        consultationsPerPage;
+        currentPage * consultationsPerPage;
 
     const indexOfFirst =
-        indexOfLast -
-        consultationsPerPage;
+        indexOfLast - consultationsPerPage;
 
     const currentConsultations =
         filteredConsultations.slice(
@@ -178,51 +126,122 @@ const Consultations = () => {
             indexOfLast
         );
 
+    // Keep page valid after delete/filter
+    useEffect(() => {
+        if (totalPages > 0 && currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+
+        if (totalPages === 0 && currentPage !== 1) {
+            setCurrentPage(1);
+        }
+    }, [totalPages, currentPage]);
+
     // =====================================================
     // STATS
     // =====================================================
 
-    const total =
-        consultations.length;
+    const total = consultations.length;
 
-    const pending =
-        consultations.filter(
-            (item) =>
-                item.status === "Pending"
-        ).length;
+    const pending = consultations.filter(
+        (item) => item.status === "Pending"
+    ).length;
 
-    const confirmed =
-        consultations.filter(
-            (item) =>
-                item.status ===
-                "Confirmed"
-        ).length;
+    const confirmed = consultations.filter(
+        (item) => item.status === "Confirmed"
+    ).length;
 
-    const completed =
-        consultations.filter(
-            (item) =>
-                item.status ===
-                "Completed"
-        ).length;
+    const completed = consultations.filter(
+        (item) => item.status === "Completed"
+    ).length;
 
-    const cancelled =
-        consultations.filter(
-            (item) =>
-                item.status ===
-                "Cancelled"
-        ).length;
+    const cancelled = consultations.filter(
+        (item) => item.status === "Cancelled"
+    ).length;
+
+    // =====================================================
+    // EXPORT CSV
+    // =====================================================
+
+    const exportCSV = () => {
+        if (filteredConsultations.length === 0) {
+            toast.error(
+                "No consultations available to export."
+            );
+            return;
+        }
+
+        const headers = [
+            "No.",
+            "Customer Name",
+            "Email",
+            "Phone",
+            "Project",
+            "Budget",
+            "Date",
+            "Time",
+            "Status",
+            "Message",
+        ];
+
+        const rows = filteredConsultations.map(
+            (item, index) => [
+                index + 1,
+                item.name || "",
+                item.email || "",
+                item.phone || "",
+                item.project || "",
+                item.budget || "",
+                item.date || "",
+                item.time || "",
+                item.status || "",
+                item.message || "",
+            ]
+        );
+
+        const csvContent = [headers, ...rows]
+            .map((row) =>
+                row
+                    .map(
+                        (value) =>
+                            `"${String(value).replace(
+                                /"/g,
+                                '""'
+                            )}"`
+                    )
+                    .join(",")
+            )
+            .join("\n");
+
+        const blob = new Blob([csvContent], {
+            type: "text/csv;charset=utf-8;",
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = `consultations-${new Date()
+            .toISOString()
+            .slice(0, 10)}.csv`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+        toast.success(
+            "Consultations exported successfully."
+        );
+    };
 
     // =====================================================
     // VIEW
     // =====================================================
 
-    const viewConsultation = (
-        consultation
-    ) => {
-        setSelectedConsultation(
-            consultation
-        );
-
+    const viewConsultation = (consultation) => {
+        setSelectedConsultation(consultation);
         setShowModal(true);
     };
 
@@ -239,50 +258,39 @@ const Consultations = () => {
     // UPDATE STATUS
     // =====================================================
 
-    const updateStatus = async (
-        id,
-        status
-    ) => {
+    const updateStatus = async (id, status) => {
         try {
             const token =
-                localStorage.getItem(
-                    "token"
-                );
+                localStorage.getItem("token");
 
-            const response =
-                await axios.put(
-                    `${API}/${id}`,
-                    { status },
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
-                );
-
-            toast.success(
-                response.data
-                    ?.message ||
-                "Consultation status updated."
+            const response = await axios.put(
+                `${API}/${id}`,
+                { status },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
             );
 
-            setConsultations(
-                (previous) =>
-                    previous.map(
-                        (item) =>
-                            item._id === id
-                                ? {
-                                      ...item,
-                                      status,
-                                  }
-                                : item
-                    )
+            toast.success(
+                response.data?.message ||
+                    "Consultation status updated."
+            );
+
+            setConsultations((previous) =>
+                previous.map((item) =>
+                    item._id === id
+                        ? {
+                              ...item,
+                              status,
+                          }
+                        : item
+                )
             );
 
             if (
-                selectedConsultation?._id ===
-                id
+                selectedConsultation?._id === id
             ) {
                 setSelectedConsultation(
                     (previous) => ({
@@ -298,9 +306,8 @@ const Consultations = () => {
             );
 
             toast.error(
-                error.response?.data
-                    ?.message ||
-                "Failed to update status."
+                error.response?.data?.message ||
+                    "Failed to update status."
             );
         }
     };
@@ -309,52 +316,39 @@ const Consultations = () => {
     // DELETE
     // =====================================================
 
-    const deleteConsultation = async (
-        id
-    ) => {
-        const confirmed =
-            window.confirm(
-                "Are you sure you want to delete this consultation?"
-            );
+    const deleteConsultation = async (id) => {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this consultation?"
+        );
 
-        if (!confirmed) {
-            return;
-        }
+        if (!confirmed) return;
 
         try {
             const token =
-                localStorage.getItem(
-                    "token"
-                );
+                localStorage.getItem("token");
 
-            const response =
-                await axios.delete(
-                    `${API}/${id}`,
-                    {
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`,
-                        },
-                    }
-                );
-
-            toast.success(
-                response.data
-                    ?.message ||
-                "Consultation deleted successfully."
+            const response = await axios.delete(
+                `${API}/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
             );
 
-            setConsultations(
-                (previous) =>
-                    previous.filter(
-                        (item) =>
-                            item._id !== id
-                    )
+            toast.success(
+                response.data?.message ||
+                    "Consultation deleted successfully."
+            );
+
+            setConsultations((previous) =>
+                previous.filter(
+                    (item) => item._id !== id
+                )
             );
 
             if (
-                selectedConsultation?._id ===
-                id
+                selectedConsultation?._id === id
             ) {
                 closeModal();
             }
@@ -365,9 +359,8 @@ const Consultations = () => {
             );
 
             toast.error(
-                error.response?.data
-                    ?.message ||
-                "Failed to delete consultation."
+                error.response?.data?.message ||
+                    "Failed to delete consultation."
             );
         }
     };
@@ -376,9 +369,7 @@ const Consultations = () => {
     // STATUS CLASS
     // =====================================================
 
-    const getStatusClass = (
-        status
-    ) => {
+    const getStatusClass = (status) => {
         switch (status) {
             case "Confirmed":
                 return "confirmed";
@@ -398,70 +389,20 @@ const Consultations = () => {
     // STATUS ICON
     // =====================================================
 
-    const getStatusIcon = (
-        status
-    ) => {
+    const getStatusIcon = (status) => {
         switch (status) {
             case "Confirmed":
-                return (
-                    <CheckCircle
-                        size={14}
-                    />
-                );
+                return <CheckCircle size={14} />;
 
             case "Completed":
-                return (
-                    <CheckCircle
-                        size={14}
-                    />
-                );
+                return <CheckCircle size={14} />;
 
             case "Cancelled":
-                return (
-                    <CircleX
-                        size={14}
-                    />
-                );
+                return <CircleX size={14} />;
 
             default:
-                return (
-                    <CircleAlert
-                        size={14}
-                    />
-                );
+                return <CircleAlert size={14} />;
         }
-    };
-
-    // =====================================================
-    // DATE
-    // =====================================================
-
-    const formatDate = (
-        value
-    ) => {
-        if (!value) {
-            return "-";
-        }
-
-        const date =
-            new Date(value);
-
-        if (
-            Number.isNaN(
-                date.getTime()
-            )
-        ) {
-            return value;
-        }
-
-        return date.toLocaleDateString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-            }
-        );
     };
 
     // =====================================================
@@ -471,15 +412,19 @@ const Consultations = () => {
     if (loading) {
         return (
             <AdminLayout>
-                <div className="consultations-loading">
-                    <RefreshCw
-                        size={32}
-                        className="consultation-loading-icon"
-                    />
+                <div className="consultations-page">
+                    <div className="consultations-loading">
+                        <div className="consultations-loader"></div>
 
-                    <h2>
-                        Loading Consultations...
-                    </h2>
+                        <h2>
+                            Loading Consultations...
+                        </h2>
+
+                        <p>
+                            Please wait while consultation
+                            data is loading.
+                        </p>
+                    </div>
                 </div>
             </AdminLayout>
         );
@@ -493,24 +438,16 @@ const Consultations = () => {
         return (
             <AdminLayout>
                 <div className="consultations-error">
+                    <CircleX size={42} />
 
-                    <CircleX
-                        size={42}
-                    />
-
-                    <h2>
-                        {error}
-                    </h2>
+                    <h2>{error}</h2>
 
                     <button
                         type="button"
-                        onClick={
-                            fetchConsultations
-                        }
+                        onClick={fetchConsultations}
                     >
                         Try Again
                     </button>
-
                 </div>
             </AdminLayout>
         );
@@ -525,31 +462,23 @@ const Consultations = () => {
                 ================================================= */}
 
                 <div className="consultations-header">
-
                     <div>
-                        <h1>
-                            Consultations
-                        </h1>
+                        <h1>Consultations</h1>
 
                         <p>
-                            Manage customer consultation requests.
+                            Manage customer consultation
+                            requests.
                         </p>
                     </div>
 
                     <button
                         type="button"
                         className="refresh-consultations-btn"
-                        onClick={
-                            fetchConsultations
-                        }
+                        onClick={fetchConsultations}
                     >
-                        <RefreshCw
-                            size={17}
-                        />
-
+                        <RefreshCw size={17} />
                         Refresh
                     </button>
-
                 </div>
 
                 {/* =================================================
@@ -559,82 +488,47 @@ const Consultations = () => {
                 <div className="consultations-stats">
 
                     <div className="consultation-stat-card">
-                        <UserRound
-                            size={24}
-                        />
+                        <UserRound size={24} />
 
                         <div>
-                            <span>
-                                Total
-                            </span>
-
-                            <strong>
-                                {total}
-                            </strong>
+                            <span>Total</span>
+                            <strong>{total}</strong>
                         </div>
                     </div>
 
                     <div className="consultation-stat-card pending">
-                        <CircleAlert
-                            size={24}
-                        />
+                        <CircleAlert size={24} />
 
                         <div>
-                            <span>
-                                Pending
-                            </span>
-
-                            <strong>
-                                {pending}
-                            </strong>
+                            <span>Pending</span>
+                            <strong>{pending}</strong>
                         </div>
                     </div>
 
                     <div className="consultation-stat-card confirmed">
-                        <CheckCircle
-                            size={24}
-                        />
+                        <CheckCircle size={24} />
 
                         <div>
-                            <span>
-                                Confirmed
-                            </span>
-
-                            <strong>
-                                {confirmed}
-                            </strong>
+                            <span>Confirmed</span>
+                            <strong>{confirmed}</strong>
                         </div>
                     </div>
 
                     <div className="consultation-stat-card completed">
-                        <CheckCircle
-                            size={24}
-                        />
+                        <CheckCircle size={24} />
 
                         <div>
-                            <span>
-                                Completed
-                            </span>
-
-                            <strong>
-                                {completed}
-                            </strong>
+                            <span>Completed</span>
+                            <strong>{completed}</strong>
                         </div>
                     </div>
 
                     <div className="consultation-stat-card cancelled">
-                        <CircleX
-                            size={24}
-                        />
+                        <CircleX size={24} />
 
                         <div>
-                            <span>
-                                Cancelled
-                            </span>
-
-                            <strong>
-                                {cancelled}
-                            </strong>
+                            <span>Cancelled</span>
+                            <strong>{cancelled}</strong>
                         </div>
                     </div>
 
@@ -643,66 +537,61 @@ const Consultations = () => {
                 {/* =================================================
                     TOOLBAR
                 ================================================= */}
+<div className="consultations-toolbar">
 
-                <div className="consultations-toolbar">
+    {/* LEFT SIDE */}
+    <div className="consultations-toolbar-left">
 
-                    <div className="consultation-search">
-                        <Search
-                            size={18}
-                        />
+        <div className="consultations-total">
+            Total Consultations : {" "}
+            <strong>{filteredConsultations.length}</strong>
+        </div>
 
-                        <input
-                            type="text"
-                            placeholder="Search name, email, phone or project..."
-                            value={search}
-                            onChange={(e) => {
-                                setSearch(
-                                    e.target.value
-                                );
+        <button
+            type="button"
+            className="export-consultations-btn"
+            onClick={exportCSV}
+        >
+            <Download size={17} />
+            Export CSV
+        </button>
 
-                                setCurrentPage(
-                                    1
-                                );
-                            }}
-                        />
-                    </div>
+    </div>
 
-                    <select
-                        value={
-                            statusFilter
-                        }
-                        onChange={(e) => {
-                            setStatusFilter(
-                                e.target.value
-                            );
+    {/* RIGHT SIDE */}
+    <div className="consultations-toolbar-right">
 
-                            setCurrentPage(
-                                1
-                            );
-                        }}
-                    >
-                        <option value="all">
-                            All Status
-                        </option>
+        <div className="consultation-search">
+            <Search size={18} />
 
-                        <option value="Pending">
-                            Pending
-                        </option>
+            <input
+                type="text"
+                placeholder="Search consultations..."
+                value={search}
+                onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                }}
+            />
+        </div>
 
-                        <option value="Confirmed">
-                            Confirmed
-                        </option>
+        <select
+            value={statusFilter}
+            onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+            }}
+        >
+            <option value="all">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
 
-                        <option value="Completed">
-                            Completed
-                        </option>
+    </div>
 
-                        <option value="Cancelled">
-                            Cancelled
-                        </option>
-                    </select>
-
-                </div>
+</div>
 
                 {/* =================================================
                     TABLE
@@ -727,35 +616,26 @@ const Consultations = () => {
 
                         <tbody>
 
-                            {currentConsultations.length >
-                            0 ? (
+                            {currentConsultations.length > 0 ? (
                                 currentConsultations.map(
-                                    (
-                                        item,
-                                        index
-                                    ) => (
+                                    (item, index) => (
                                         <tr
                                             key={
                                                 item._id
                                             }
                                         >
-
                                             <td>
-                                                {
-                                                    indexOfFirst +
+                                                {indexOfFirst +
                                                     index +
-                                                    1
-                                                }
+                                                    1}
                                             </td>
 
                                             <td>
                                                 <div className="consultation-customer">
 
                                                     <div className="consultation-avatar">
-                                                        {(
-                                                            item.name ||
-                                                            "U"
-                                                        )
+                                                        {(item.name ||
+                                                            "U")
                                                             .charAt(
                                                                 0
                                                             )
@@ -794,16 +674,16 @@ const Consultations = () => {
                                             </td>
 
                                             <td>
-                                                {
-                                                    item.budget ||
-                                                    "-"
-                                                }
+                                                {item.budget ||
+                                                    "-"}
                                             </td>
 
                                             <td>
                                                 <div className="date-cell">
                                                     <CalendarDays
-                                                        size={14}
+                                                        size={
+                                                            14
+                                                        }
                                                     />
 
                                                     {
@@ -815,7 +695,9 @@ const Consultations = () => {
                                             <td>
                                                 <div className="time-cell">
                                                     <Clock3
-                                                        size={14}
+                                                        size={
+                                                            14
+                                                        }
                                                     />
 
                                                     {
@@ -879,7 +761,6 @@ const Consultations = () => {
 
                                                 </div>
                                             </td>
-
                                         </tr>
                                     )
                                 )
@@ -895,92 +776,60 @@ const Consultations = () => {
                             )}
 
                         </tbody>
-
                     </table>
-
                 </div>
 
                 {/* =================================================
                     PAGINATION
                 ================================================= */}
 
-                {filteredConsultations.length >
-                    0 && (
-                    <div className="consultations-pagination">
+{filteredConsultations.length > 0 && (
+    <div className="consultations-pagination">
 
-                        <button
-                            type="button"
-                            disabled={
-                                currentPage ===
-                                1
-                            }
-                            onClick={() =>
-                                setCurrentPage(
-                                    (
-                                        page
-                                    ) =>
-                                        page -
-                                        1
-                                )
-                            }
-                        >
-                            ← Previous
-                        </button>
+        <button
+            type="button"
+            className="pagination-arrow"
+            disabled={currentPage === 1}
+            onClick={() =>
+                setCurrentPage((page) => page - 1)
+            }
+        >
+            &lt;
+        </button>
 
-                        {Array.from(
-                            {
-                                length:
-                                    totalPages,
-                            },
-                            (_, index) => (
-                                <button
-                                    key={
-                                        index
-                                    }
-                                    type="button"
-                                    className={
-                                        currentPage ===
-                                        index +
-                                            1
-                                            ? "active-page"
-                                            : ""
-                                    }
-                                    onClick={() =>
-                                        setCurrentPage(
-                                            index +
-                                                1
-                                        )
-                                    }
-                                >
-                                    {
-                                        index +
-                                        1
-                                    }
-                                </button>
-                            )
-                        )}
+        {Array.from(
+            { length: totalPages },
+            (_, index) => (
+                <button
+                    key={index}
+                    type="button"
+                    className={
+                        currentPage === index + 1
+                            ? "active-page"
+                            : ""
+                    }
+                    onClick={() =>
+                        setCurrentPage(index + 1)
+                    }
+                >
+                    {index + 1}
+                </button>
+            )
+        )}
 
-                        <button
-                            type="button"
-                            disabled={
-                                currentPage ===
-                                totalPages
-                            }
-                            onClick={() =>
-                                setCurrentPage(
-                                    (
-                                        page
-                                    ) =>
-                                        page +
-                                        1
-                                )
-                            }
-                        >
-                            Next →
-                        </button>
+        <button
+            type="button"
+            className="pagination-arrow"
+            disabled={currentPage === totalPages}
+            onClick={() =>
+                setCurrentPage((page) => page + 1)
+            }
+        >
+            &gt;
+        </button>
 
-                    </div>
-                )}
+    </div>
+)}
 
             </div>
 
@@ -992,19 +841,14 @@ const Consultations = () => {
                 selectedConsultation && (
                     <div
                         className="consultation-modal-overlay"
-                        onClick={
-                            closeModal
-                        }
+                        onClick={closeModal}
                     >
-
                         <div
                             className="consultation-modal"
                             onClick={(e) =>
                                 e.stopPropagation()
                             }
                         >
-
-                            {/* HEADER */}
 
                             <div className="consultation-modal-header">
 
@@ -1023,18 +867,12 @@ const Consultations = () => {
                                 <button
                                     type="button"
                                     className="consultation-close-btn"
-                                    onClick={
-                                        closeModal
-                                    }
+                                    onClick={closeModal}
                                 >
-                                    <X
-                                        size={20}
-                                    />
+                                    <X size={20} />
                                 </button>
 
                             </div>
-
-                            {/* BODY */}
 
                             <div className="consultation-modal-body">
 
@@ -1044,7 +882,6 @@ const Consultations = () => {
                                         <span>
                                             Customer Name
                                         </span>
-
                                         <strong>
                                             {
                                                 selectedConsultation.name
@@ -1056,7 +893,6 @@ const Consultations = () => {
                                         <span>
                                             Email
                                         </span>
-
                                         <strong>
                                             {
                                                 selectedConsultation.email
@@ -1068,7 +904,6 @@ const Consultations = () => {
                                         <span>
                                             Phone
                                         </span>
-
                                         <strong>
                                             {
                                                 selectedConsultation.phone
@@ -1080,7 +915,6 @@ const Consultations = () => {
                                         <span>
                                             Project
                                         </span>
-
                                         <strong>
                                             {
                                                 selectedConsultation.project
@@ -1092,10 +926,10 @@ const Consultations = () => {
                                         <span>
                                             Budget
                                         </span>
-
                                         <strong>
                                             {
-                                                selectedConsultation.budget
+                                                selectedConsultation.budget ||
+                                                "-"
                                             }
                                         </strong>
                                     </div>
@@ -1104,7 +938,6 @@ const Consultations = () => {
                                         <span>
                                             Date
                                         </span>
-
                                         <strong>
                                             {
                                                 selectedConsultation.date
@@ -1116,7 +949,6 @@ const Consultations = () => {
                                         <span>
                                             Time
                                         </span>
-
                                         <strong>
                                             {
                                                 selectedConsultation.time
@@ -1128,7 +960,6 @@ const Consultations = () => {
                                         <span>
                                             Status
                                         </span>
-
                                         <strong>
                                             {
                                                 selectedConsultation.status
@@ -1139,7 +970,6 @@ const Consultations = () => {
                                 </div>
 
                                 <div className="consultation-message-box">
-
                                     <span>
                                         Customer Message
                                     </span>
@@ -1150,10 +980,7 @@ const Consultations = () => {
                                             "No message provided."
                                         }
                                     </p>
-
                                 </div>
-
-                                {/* STATUS */}
 
                                 <div className="consultation-status-update">
 
@@ -1194,16 +1021,12 @@ const Consultations = () => {
 
                             </div>
 
-                            {/* FOOTER */}
-
                             <div className="consultation-modal-footer">
 
                                 <button
                                     type="button"
                                     className="consultation-modal-close-btn"
-                                    onClick={
-                                        closeModal
-                                    }
+                                    onClick={closeModal}
                                 >
                                     Close
                                 </button>
@@ -1217,17 +1040,13 @@ const Consultations = () => {
                                         )
                                     }
                                 >
-                                    <Trash2
-                                        size={17}
-                                    />
-
+                                    <Trash2 size={17} />
                                     Delete
                                 </button>
 
                             </div>
 
                         </div>
-
                     </div>
                 )}
 

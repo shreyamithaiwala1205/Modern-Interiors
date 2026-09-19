@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned / In Progress
-- Additional payment methods & invoice downloads.
-- Enhanced 3D furniture customization preview.
+### Added
+- Centered, luxury dark-and-gold toast notifications configured at `top-center` across the application.
+
+### Changed
+- Refined user and admin login notification messages on success, failure, and input validation.
+- Updated notification CSS in `index.css` with backdrop blur, centered text, gold/rose border highlights, and smooth entrance animation.
+- Modernized `AdminLogin` to use centered toast alerts instead of native browser popups.
 
 ---
 

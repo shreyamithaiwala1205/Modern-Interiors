@@ -4,6 +4,41 @@ const router = express.Router();
 
 const Coupon = require("../models/Coupon");
 
+// GET ACTIVE COUPONS
+router.get("/active", async (req, res) => {
+    try {
+        const coupons = await Coupon.find({ active: true }).sort({ discount: -1, minAmount: 1 });
+        return res.status(200).json({
+            success: true,
+            count: coupons.length,
+            coupons,
+        });
+    } catch (error) {
+        console.error("GET ACTIVE COUPONS ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch active coupons",
+        });
+    }
+});
+
+router.get("/", async (req, res) => {
+    try {
+        const coupons = await Coupon.find({ active: true }).sort({ discount: -1, minAmount: 1 });
+        return res.status(200).json({
+            success: true,
+            count: coupons.length,
+            coupons,
+        });
+    } catch (error) {
+        console.error("GET COUPONS ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch coupons",
+        });
+    }
+});
+
 router.post(
     "/apply",
     async (req, res) => {
@@ -15,10 +50,12 @@ router.post(
                     .trim()
                     .toUpperCase();
 
-            const cartTotal =
-                Number(
-                    req.body.cartTotal
-                );
+            const rawTotal =
+                req.body.cartTotal !== undefined
+                    ? req.body.cartTotal
+                    : req.body.totalAmount;
+
+            const cartTotal = Number(rawTotal);
 
             if (!code) {
                 return res.status(400).json({

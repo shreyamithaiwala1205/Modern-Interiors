@@ -8,7 +8,9 @@ const getAllFurniture = async (req, res) => {
 
   try {
 
-    const furniture = await Furniture.find();
+    const furniture = await Furniture.find({
+      isVisible: { $ne: false },
+    });
 
     res.status(200).json({
       success: true,

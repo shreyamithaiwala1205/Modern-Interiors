@@ -11,8 +11,11 @@ import {
   FaPhoneAlt,
   FaEnvelope,
 } from "react-icons/fa";
+import { useProjectCategories } from "../context/ProjectCategoryContext";
 
 function Footer() {
+  const { categories } = useProjectCategories();
+
   return (
     <footer className="footer">
 
@@ -23,7 +26,7 @@ function Footer() {
         <div className="footer-box">
 
           <h2 className="footer-logo">
-            Modern <span>Interiors</span>
+            Modern<span>Interiors</span>
           </h2>
 
           <p>
@@ -82,23 +85,21 @@ function Footer() {
 
         </div>
 
-        {/* Services */}
+        {/* Project Categories */}
 
         <div className="footer-box">
 
-          <h3>Services</h3>
+          <h3>Project Categories</h3>
 
           <ul>
 
-            <li>Luxury Living Room</li>
-
-            <li>Modular Kitchen</li>
-
-            <li>Bedroom Design</li>
-
-            <li>Office Interior</li>
-
-            <li>Commercial Design</li>
+            {categories.map((cat) => (
+              <li key={cat._id || cat.name}>
+                <Link to={`/gallery?category=${cat.name}`}>
+                  {cat.label || cat.name}
+                </Link>
+              </li>
+            ))}
 
           </ul>
 

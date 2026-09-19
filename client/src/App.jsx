@@ -24,12 +24,14 @@ import ResetPassword from "./pages/ResetPassword";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import Profile from "./pages/Profile";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Consultation from "./pages/Consultation";
 
 import { WishlistProvider } from "./context/WishlistContext";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { ProjectCategoryProvider } from "./context/ProjectCategoryContext";
 import UserRoute from "./utils/UserRoute";
 
 // =============================
@@ -41,11 +43,14 @@ import Dashboard from "./admin/pages/Dashboard";
 import Users from "./admin/pages/Users";
 import Products from "./admin/pages/Products";
 import OrdersAdmin from "./admin/pages/Orders";
-import AddProduct from "./admin/pages/AddProduct";
 import Coupons from "./admin/pages/Coupons";
 import Consultations from "./admin/pages/Consultations";
 import Contacts from "./admin/pages/Contacts";
 import Projects from "./admin/pages/Projects";
+import ProjectCategories from "./admin/pages/ProjectCategories";
+import HomeSettings from "./admin/pages/HomeSettings";
+import EmailSettings from "./admin/pages/EmailSettings";
+import ReviewsAdmin from "./admin/pages/Reviews";
 
 import AdminProtectedRoute from "./utils/AdminProtectedRoute";
 
@@ -87,6 +92,15 @@ function AppContent() {
         <Route
           path="/account"
           element={<Account />}
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <UserRoute>
+              <Profile />
+            </UserRoute>
+          }
         />
 
         <Route
@@ -204,15 +218,6 @@ function AppContent() {
        />
 
         <Route
-          path="/admin/add-product"
-          element={
-            <AdminProtectedRoute>
-              <AddProduct />
-            </AdminProtectedRoute>
-          }
-        />
-
-        <Route
             path="/admin/consultations"
             element={
                 <AdminProtectedRoute>
@@ -238,6 +243,42 @@ function AppContent() {
             }
         />
 
+        <Route
+            path="/admin/project-categories"
+            element={
+                <AdminProtectedRoute>
+                    <ProjectCategories />
+                </AdminProtectedRoute>
+            }
+        />
+
+        <Route
+            path="/admin/reviews"
+            element={
+                <AdminProtectedRoute>
+                    <ReviewsAdmin />
+                </AdminProtectedRoute>
+            }
+        />
+
+        <Route
+            path="/admin/home-settings"
+            element={
+                <AdminProtectedRoute>
+                    <HomeSettings />
+                </AdminProtectedRoute>
+            }
+        />
+
+        <Route
+            path="/admin/email-settings"
+            element={
+                <AdminProtectedRoute>
+                    <EmailSettings />
+                </AdminProtectedRoute>
+            }
+        />
+
       </Routes>
       {!isAdminRoute && <Footer />}
 
@@ -251,9 +292,11 @@ function App() {
     <AuthProvider>
       <WishlistProvider>
         <CartProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
+          <ProjectCategoryProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </ProjectCategoryProvider>
         </CartProvider>
       </WishlistProvider>
     </AuthProvider>

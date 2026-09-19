@@ -6,12 +6,15 @@ import React, {
 } from "react";
 
 import axios from "axios";
+import toast from "react-hot-toast";
+import { useAuth } from "./AuthContext";
 
 const WishlistContext = createContext();
 
 export const WishlistProvider = ({ children }) => {
 
   const [wishlist, setWishlist] = useState([]);
+  const { user } = useAuth();
 
   // ===============================
   // Fetch Wishlist
@@ -37,11 +40,7 @@ export const WishlistProvider = ({ children }) => {
         }
       );
 
-      const products = response.data.wishlist.map(
-        (item) => item.furniture
-      );
-
-      setWishlist(products);
+      setWishlist(response.data.wishlist || []);
 
     } catch (error) {
 
@@ -56,10 +55,12 @@ export const WishlistProvider = ({ children }) => {
   // ===============================
 
   useEffect(() => {
-
-    fetchWishlist();
-
-  }, []);
+    if (user) {
+      fetchWishlist();
+    } else {
+      setWishlist([]);
+    }
+  }, [user]);
 
   // ===============================
   // Add / Remove Wishlist
@@ -70,20 +71,20 @@ export const WishlistProvider = ({ children }) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("Please Login First");
+      toast.error("Please login to manage your wishlist.");
       return;
     }
 
     try {
 
-      const exists = wishlist.some(
-        (item) => item._id === product._id
+      const existingEntry = wishlist.find(
+        (item) => item.furniture?._id === product._id
       );
 
-      if (exists) {
+      if (existingEntry) {
 
-        const response = await axios.get(
-          "http://localhost:5000/api/wishlist",
+        await axios.delete(
+          `http://localhost:5000/api/wishlist/${existingEntry._id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -91,22 +92,7 @@ export const WishlistProvider = ({ children }) => {
           }
         );
 
-        const wishlistItem = response.data.wishlist.find(
-          (item) => item.furniture._id === product._id
-        );
-
-        if (wishlistItem) {
-
-          await axios.delete(
-            `http://localhost:5000/api/wishlist/${wishlistItem._id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-        }
+        toast.success(`${product.name || "Item"} removed from wishlist.`);
 
       } else {
 
@@ -122,15 +108,17 @@ export const WishlistProvider = ({ children }) => {
           }
         );
 
+        toast.success(`${product.name || "Item"} added to wishlist!`);
+
       }
 
       await fetchWishlist();
 
     } catch (error) {
 
-      alert(
+      toast.error(
         error.response?.data?.message ||
-        "Wishlist Error"
+        "Unable to update wishlist. Please try again."
       );
 
     }
@@ -138,22 +126,22 @@ export const WishlistProvider = ({ children }) => {
   };
 
   // ===============================
-  // Remove Wishlist
+  // Remove Wishlist (by wishlist entry id)
   // ===============================
 
-  const removeWishlist = async (productId) => {
+  const removeWishlist = async (entryId) => {
 
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("Please Login First");
+      toast.error("Please login to manage your wishlist.");
       return;
     }
 
     try {
 
-      const response = await axios.get(
-        "http://localhost:5000/api/wishlist",
+      await axios.delete(
+        `http://localhost:5000/api/wishlist/${entryId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -161,30 +149,15 @@ export const WishlistProvider = ({ children }) => {
         }
       );
 
-      const wishlistItem = response.data.wishlist.find(
-        (item) => item.furniture._id === productId
-      );
-
-      if (wishlistItem) {
-
-        await axios.delete(
-          `http://localhost:5000/api/wishlist/${wishlistItem._id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-      }
+      toast.success("Item removed from wishlist.");
 
       await fetchWishlist();
 
     } catch (error) {
 
-      alert(
+      toast.error(
         error.response?.data?.message ||
-        "Remove Wishlist Error"
+        "Unable to remove item from wishlist."
       );
 
     }
@@ -198,7 +171,7 @@ export const WishlistProvider = ({ children }) => {
   const isWishlisted = (id) => {
 
     return wishlist.some(
-      (item) => item._id === id
+      (item) => item.furniture?._id === id
     );
 
   };
