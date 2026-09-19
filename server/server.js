@@ -26,6 +26,8 @@ const projectRoutes = require("./routes/projectRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const homeSettingsRoutes = require("./routes/homeSettingsRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const styleFinderRoutes = require("./routes/styleFinderRoutes");
+const deliveryRoutes = require("./routes/deliveryRoutes");
 
 const adminRoutes = require("./routes/adminRoutes");
 const adminProductRoutes = require("./routes/adminProductRoutes");
@@ -38,6 +40,7 @@ const projectCategoryRoutes = require("./routes/projectCategoryRoutes");
 const adminProjectCategoryRoutes = require("./routes/adminProjectCategoryRoutes");
 const adminHomeSettingsRoutes = require("./routes/adminHomeSettingsRoutes");
 const adminEmailSettingsRoutes = require("./routes/adminEmailSettingsRoutes");
+const adminAnalyticsRoutes = require("./routes/adminAnalyticsRoutes");
 const adminReviewRoutes = require("./routes/adminReviewRoutes");
 
 const app = express();
@@ -184,6 +187,16 @@ app.use(
     reviewRoutes
 );
 
+app.use(
+    "/api/delivery", 
+    deliveryRoutes
+);
+
+app.use(
+    "/api/style-finder", 
+    styleFinderRoutes
+);
+
 // =====================================================
 // ADMIN ROUTES
 // =====================================================
@@ -201,11 +214,6 @@ app.use(
 app.use(
     "/api/admin/orders",
     adminOrderRoutes
-);
-
-app.use(
-    "/api/coupon",
-    couponRoutes
 );
 
 app.use(
@@ -246,6 +254,11 @@ app.use(
 app.use(
     "/api/admin/reviews",
     adminReviewRoutes
+);
+
+app.use(
+    "/api/admin/analytics",
+    adminAnalyticsRoutes
 );
 
 // =====================================================

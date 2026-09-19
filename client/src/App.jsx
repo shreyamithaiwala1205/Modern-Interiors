@@ -27,11 +27,13 @@ import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Consultation from "./pages/Consultation";
+import StyleFinder from "./pages/StyleFinder";
 
 import { WishlistProvider } from "./context/WishlistContext";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { ProjectCategoryProvider } from "./context/ProjectCategoryContext";
+import { CompareProvider } from "./context/CompareContext";
 import UserRoute from "./utils/UserRoute";
 
 // =============================
@@ -165,6 +167,11 @@ function AppContent() {
           element={<Consultation />}
         />
 
+        <Route
+            path="/style-finder"
+            element={<StyleFinder />}
+        />
+
         {/* ================= ADMIN ROUTES ================= */}
 
         <Route
@@ -294,7 +301,9 @@ function App() {
         <CartProvider>
           <ProjectCategoryProvider>
             <BrowserRouter>
+              <CompareProvider>
               <AppContent />
+              </CompareProvider>
             </BrowserRouter>
           </ProjectCategoryProvider>
         </CartProvider>

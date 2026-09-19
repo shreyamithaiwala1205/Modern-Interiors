@@ -12,6 +12,7 @@ import axios from "axios";
 
 import getImageUrl from "../utils/imageUrl";
 import ReviewsSection from "../components/ReviewsSection";
+import CompareButton from "../components/compare/CompareButton";
 
 import {
   useWishlist,
@@ -109,6 +110,8 @@ function ProductDetails() {
             selectedProduct
           );
 
+          rememberRecentlyViewed(selectedProduct);
+          
           const viewed =
             JSON.parse(
               localStorage.getItem(
@@ -478,6 +481,7 @@ function ProductDetails() {
                 <span>Buy Now</span>
               </button>
 
+              <CompareButton product={product} />
             </div>
 
           </div>
